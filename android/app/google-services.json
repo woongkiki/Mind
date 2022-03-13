@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "737850811312",
+    "project_id": "mindapp-3996c",
+    "storage_bucket": "mindapp-3996c.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:737850811312:android:eb7366ade1a940767a2c75",
+        "android_client_info": {
+          "package_name": "com.mind"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "737850811312-5eajvjebk5jg5ngjt06ar8s19v23o64g.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD6-awxuNeSq4Zw2NwYqFDDymgLfZuSGqc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "737850811312-5eajvjebk5jg5ngjt06ar8s19v23o64g.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
