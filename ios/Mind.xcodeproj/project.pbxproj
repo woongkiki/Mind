@@ -14,6 +14,7 @@
 		1E4D69377F6C6C489CB984DC /* libPods-Mind.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 005E606FEBC195B28B46D864 /* libPods-Mind.a */; };
 		4F649C1D6733288A4B944855 /* libPods-Mind-MindTests.a in Frameworks */ = {isa = PBXBuildFile; fileRef = DEDACB67B6E2C32669CD36D4 /* libPods-Mind-MindTests.a */; };
 		81AB9BB82411601600AC10FF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 81AB9BB72411601600AC10FF /* LaunchScreen.storyboard */; };
+		E0AD8F9F27E47511000554EE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E0AD8F9E27E47511000554EE /* Assets.xcassets */; };
 		E0D2916F27CC75DB00AA5DCC /* NanumSquareRoundB.ttf in Resources */ = {isa = PBXBuildFile; fileRef = E0D2916B27CC75DB00AA5DCC /* NanumSquareRoundB.ttf */; };
 		E0D2917027CC75DB00AA5DCC /* NanumSquareRoundR.ttf in Resources */ = {isa = PBXBuildFile; fileRef = E0D2916C27CC75DB00AA5DCC /* NanumSquareRoundR.ttf */; };
 		E0D2917127CC75DB00AA5DCC /* NanumSquareRoundL.ttf in Resources */ = {isa = PBXBuildFile; fileRef = E0D2916D27CC75DB00AA5DCC /* NanumSquareRoundL.ttf */; };
@@ -47,6 +48,7 @@
 		B7AF2CE5569480FE28ED3CDC /* Pods-Mind.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Mind.release.xcconfig"; path = "Target Support Files/Pods-Mind/Pods-Mind.release.xcconfig"; sourceTree = "<group>"; };
 		CA647A309A3EEE98F08F4871 /* Pods-Mind.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Mind.debug.xcconfig"; path = "Target Support Files/Pods-Mind/Pods-Mind.debug.xcconfig"; sourceTree = "<group>"; };
 		DEDACB67B6E2C32669CD36D4 /* libPods-Mind-MindTests.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Mind-MindTests.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		E0AD8F9E27E47511000554EE /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		E0D2916B27CC75DB00AA5DCC /* NanumSquareRoundB.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = NanumSquareRoundB.ttf; sourceTree = "<group>"; };
 		E0D2916C27CC75DB00AA5DCC /* NanumSquareRoundR.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = NanumSquareRoundR.ttf; sourceTree = "<group>"; };
 		E0D2916D27CC75DB00AA5DCC /* NanumSquareRoundL.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = NanumSquareRoundL.ttf; sourceTree = "<group>"; };
@@ -94,6 +96,7 @@
 		13B07FAE1A68108700A75B9A /* Mind */ = {
 			isa = PBXGroup;
 			children = (
+				E0AD8F9E27E47511000554EE /* Assets.xcassets */,
 				13B07FAF1A68108700A75B9A /* AppDelegate.h */,
 				13B07FB01A68108700A75B9A /* AppDelegate.m */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
@@ -267,6 +270,7 @@
 				E0D2917227CC75DB00AA5DCC /* NanumSquareRoundEB.ttf in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				E0D2916F27CC75DB00AA5DCC /* NanumSquareRoundB.ttf in Resources */,
+				E0AD8F9F27E47511000554EE /* Assets.xcassets in Resources */,
 				E0D2917027CC75DB00AA5DCC /* NanumSquareRoundR.ttf in Resources */,
 				E0D2917127CC75DB00AA5DCC /* NanumSquareRoundL.ttf in Resources */,
 			);

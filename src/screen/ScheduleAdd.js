@@ -10,6 +10,12 @@ import {possibleMeberList} from '../Utils/DummyData';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import Postcode from '@actbase/react-daum-postcode';
 
+import {connect} from 'react-redux';
+import { actionCreators as UserAction } from '../redux/module/action/UserAction';
+import { StackActions } from '@react-navigation/native';
+import Api from '../Api';
+import ToastMessage from '../components/ToastMessage';
+
 Date.prototype.format = function(f) {
     if (!this.valueOf()) return " ";
  
@@ -41,7 +47,7 @@ const {width} = Dimensions.get('window');
 
 const ScheduleAdd = (props) => {
 
-    const {navigation, route} = props;
+    const {navigation, route, userInfo} = props;
 
     const {params} = route;
 
@@ -60,7 +66,7 @@ const ScheduleAdd = (props) => {
 
     const startDateHandler = (date) => {
         startDataModalClose();
-        setStartDate(date.format("yyyy.MM.dd"))
+        setStartDate(date.format("yyyy-MM-dd"))
     }
 
     const startDataModalClose = () => {
@@ -100,11 +106,55 @@ const ScheduleAdd = (props) => {
     const clientChange = (name) => {
         setClientName(name);
     }
+    const [clientModal, setClientModal] = useState(false);
+    const [clientListData, setClientListData] = useState([]);
+    const clientSearch = () => {
+        Api.send('db_search', {'idx':userInfo.mb_no, 'clientName':clientName}, (args)=>{
+            let resultItem = args.resultItem;
+            let arrItems = args.arrItems;
+    
+            if(resultItem.result === 'Y' && arrItems) {
+              // console.log('고객검색  결과: ', arrItems, resultItem);
 
-    //중요도
+               setClientListData(arrItems);
+            }else{
+                console.log('스케줄 고객검색 결과 출력 실패!', resultItem);
+
+            }
+        });
+    }
+    const [selectClient, setSelectClient] = useState('');
+    const [selectClientIdx, setSelectClientIdx] = useState('');
+
+    const selectClientHandler = (names, idx) => {
+        setSelectClient(names);
+        setSelectClientIdx(idx);
+        setClientModal(false);
+    }
+
+    //중요도 홍길동
     const [important, setImportant] = useState('');
 
-    const [alarm, setAlarm] = useState('기본');
+    const [alarm, setAlarm] = useState('기본(2시간 전)');
+
+    const [categorys, setCategorys] = useState('');
+
+    const scheduleAdd = () => {
+        Api.send('schedule_insert', {'sName':scheduleName, 'startDate':startDate, 'time':time, 'zip':addrText, 'addr1':addr1, 'addr2':addr2, 'cname':selectClient, 'cidx':selectClientIdx, 'important':important, 'alarm':alarm, 'categorys':categorys, 'mb_id':userInfo.mb_name, 'mb_idx':userInfo.mb_no}, (args)=>{
+            let resultItem = args.resultItem;
+            let arrItems = args.arrItems;
+    
+            if(resultItem.result === 'Y' && arrItems) {
+               console.log('스케줄 등록 결과: ', arrItems, resultItem);
+               ToastMessage(resultItem.message);
+               navigation.goBack();
+               //setClientListData(arrItems);
+            }else{
+                console.log('스케줄 등록 출력 실패!', resultItem);
+                ToastMessage(resultItem.message);
+            }
+        });
+    }
 
     return (
         <Box flex={1} backgroundColor='#fff'>
@@ -112,6 +162,27 @@ const ScheduleAdd = (props) => {
             <ScrollView>
                 <Box p='20px'>
                     <Box>
+                        <DefText text='일정 카테고리' style={[styles.labelTitle]} />
+                        <Select
+                            selectedValue={categorys}
+                            width='100%'
+                            height='40px'
+                            fontSize={fsize.fs12}
+                            style={fweight.r}
+                            backgroundColor='#fff'
+                            borderWidth={1}
+                            borderColor='#999999'
+                            onValueChange={(itemValue) => setCategorys(itemValue)}
+                            placeholder='일정 카테고리를 선택하세요.'
+                            
+                        >
+                            <Select.Item label='미팅' value='미팅' />
+                            <Select.Item label='통화' value='통화' />
+                            <Select.Item label='계약' value='계약' />
+                            <Select.Item label='상담' value='상담' />
+                        </Select>
+                    </Box>
+                    <Box mt='30px'>
                         <DefText text='일정명' style={[styles.labelTitle]} />
                         <DefInput 
                             placeholderText='일정명을 입력해주세요.'
@@ -147,46 +218,55 @@ const ScheduleAdd = (props) => {
                             </Box>
                         </HStack>
                     </Box>
-                    <Box mt='30px'>
-                        <DefText text='주소' style={[styles.labelTitle]} />
-                        <HStack justifyContent={'space-between'}>
-                            <Box width='63%'>
+                    {
+                        categorys != '통화' && 
+                        <Box mt='30px'>
+                            <DefText text='주소' style={[styles.labelTitle]} />
+                            <HStack justifyContent={'space-between'}>
+                                <Box width='63%'>
+                                    <DefInput 
+                                        placeholderText='우편번호'
+                                        inputValue={addrText}
+                                    />
+                                </Box>
+                                <Box width='35%'>
+                                    <TouchableOpacity style={[styles.buttons]} onPress={()=>setAddrModal(true)}>
+                                        <DefText text='주소 검색' style={[styles.buttonsText]} />
+                                    </TouchableOpacity>
+                                </Box>
+                            </HStack>
+                            <Box mt='10px'>
                                 <DefInput 
-                                    placeholderText='우편번호'
-                                    inputValue={addrText}
+                                    placeholderText='상세 주소를 입력해 주세요.'
+                                    inputValue={addr1}
                                 />
                             </Box>
-                            <Box width='35%'>
-                                <TouchableOpacity style={[styles.buttons]} onPress={()=>setAddrModal(true)}>
-                                    <DefText text='주소 검색' style={[styles.buttonsText]} />
-                                </TouchableOpacity>
+                            <Box mt='10px'>
+                                <DefInput 
+                                    placeholderText='추가 주소를 입력해 주세요.'
+                                    inputValue={addr2}
+                                />
                             </Box>
-                        </HStack>
-                        <Box mt='10px'>
-                            <DefInput 
-                                placeholderText='상세 주소를 입력해 주세요.'
-                                inputValue={addr1}
-                            />
                         </Box>
-                        <Box mt='10px'>
-                            <DefInput 
-                                placeholderText='추가 주소를 입력해 주세요.'
-                                inputValue={addr2}
-                            />
-                        </Box>
-                    </Box>
+                    }
                     <Box mt='30px'>
                         <DefText text='고객명' style={[styles.labelTitle]} />
                         <HStack justifyContent={'space-between'}>
-                            <Box width='63%'>
-                                <DefInput 
+                            <Box width='63%' height='40px' borderWidth={1} borderColor='#999' borderRadius={5} justifyContent='center' pl='15px'>
+                                {/* <DefInput 
                                     placeholderText='고객명을 입력하세요.'
                                     inputValue={clientName}
                                     onChangeText={clientChange}
-                                />
+                                /> */}
+                                {
+                                    selectClient != '' ?
+                                    <DefText text={selectClient} style={{fontSize:fsize.fs12}} />
+                                    :
+                                    <DefText text='고객명을 입력하세요.' style={{fontSize:fsize.fs12, color:'#999999'}} />
+                                }
                             </Box>
                             <Box width='35%'>
-                                <TouchableOpacity style={[styles.buttons]}>
+                                <TouchableOpacity style={[styles.buttons]} onPress={()=>setClientModal(true)}>
                                     <DefText text='고객 검색' style={[styles.buttonsText]} />
                                 </TouchableOpacity>
                             </Box>
@@ -215,22 +295,22 @@ const ScheduleAdd = (props) => {
                     <Box mt='30px'>
                         <DefText text='알림 설정' style={[styles.labelTitle]} />
                         <HStack>
-                            <TouchableOpacity onPress={()=>setAlarm('기본')}>
+                            <TouchableOpacity onPress={()=>setAlarm('기본(2시간 전)')}>
                                 <HStack alignItems={'center'}>
-                                    <Box style={[{width:21, height:21, borderRadius:21, borderWidth:1, borderColor:'#004375', justifyContent:'center', alignItems:'center', marginRight:10}, alarm == '기본' && {backgroundColor:'#004375'}]}>
+                                    <Box style={[{width:21, height:21, borderRadius:21, borderWidth:1, borderColor:'#004375', justifyContent:'center', alignItems:'center', marginRight:10}, alarm == '기본(2시간 전)' && {backgroundColor:'#004375'}]}>
                                         {
-                                            alarm == '기본' &&
+                                            alarm == '기본(2시간 전)' &&
                                            <Image source={require('../images/checkIcons.png')} alt='체크아이콘' style={{width:9, height:6, resizeMode:'contain'}} />
                                         }
                                     </Box>
                                     <DefText text='기본(2시간 전)' />
                                 </HStack>
                             </TouchableOpacity>
-                            <TouchableOpacity onPress={()=>setAlarm('지정')} style={{marginLeft:20}}>
+                            <TouchableOpacity onPress={()=>setAlarm('시간지정')} style={{marginLeft:20}}>
                                 <HStack alignItems={'center'}>
-                                    <Box style={[{width:21, height:21, borderRadius:21, borderWidth:1, borderColor:'#004375', justifyContent:'center', alignItems:'center', marginRight:10}, alarm == '지정' && {backgroundColor:'#004375'}]}>
+                                    <Box style={[{width:21, height:21, borderRadius:21, borderWidth:1, borderColor:'#004375', justifyContent:'center', alignItems:'center', marginRight:10}, alarm == '시간지정' && {backgroundColor:'#004375'}]}>
                                         {
-                                            alarm == '지정' &&
+                                            alarm == '시간지정' &&
                                            <Image source={require('../images/checkIcons.png')} alt='체크아이콘' style={{width:9, height:6, resizeMode:'contain'}} />
                                         }
                                     </Box>
@@ -243,6 +323,7 @@ const ScheduleAdd = (props) => {
             </ScrollView>
             <SubmitButtons 
                 btnText='완료'
+                onPress={scheduleAdd}
             />
             <DateTimePickerModal
                 isVisible={startDateModal}
@@ -256,6 +337,83 @@ const ScheduleAdd = (props) => {
                 onConfirm={handleConfirmTime}
                 onCancel={hideTimePicker}
             />
+            <Modal isOpen={clientModal} onClose={() => setClientModal(false)}>
+                
+                <Modal.Content>
+                    <Modal.Body>
+                        <DefText text='고객명' style={[{fontSize:fsize.fs16}, fweight.eb]} />
+                        <HStack justifyContent={'space-between'} mt='15px'>
+                            <Box width='72%'>
+                                <DefInput
+                                    placeholderText={'고객명을 입력해주세요.'}
+                                    inputValue={clientName}
+                                    onChangeText={clientChange}
+                                    onPress={clientSearch}
+                                />
+                                {/* 홍길동 */}
+                            </Box>
+                            <Box width='25%'>
+                                <TouchableOpacity onPress={clientSearch} style={{height:40, backgroundColor:colorSelect.blue, borderRadius:5, justifyContent:'center', alignItems:'center'}}>
+                                    <DefText text='검색' style={[styles.buttonsText]}  />
+                                </TouchableOpacity>
+                            </Box>
+                        </HStack>
+                        <Box mt='30px'>
+                            <DefText text='결과 내역' style={[{fontSize:fsize.fs16, marginBottom:15}, fweight.eb]} />
+                            {
+                                clientListData != '' &&
+                                clientListData.length > 0 ?
+                                clientListData.map((item, index)=> {
+                                    return(
+                                        <Box key={index} p='15px' borderRadius={5} borderWidth={1} borderColor='#999'>
+                                            <HStack >
+                                                <Box width='25%'>
+                                                    <DefText text={'고객명'} style={[styles.memberTitle]} />
+                                                </Box>
+                                                <Box width='73%'>
+                                                    <DefText text={item.wr_subject} />
+                                                </Box>
+                                            </HStack>
+                                            <HStack mt='10px'>
+                                                <Box width='25%'>
+                                                    <DefText text={'나이'} style={[styles.memberTitle]} />
+                                                </Box>
+                                                <Box width='73%'>
+                                                    <DefText text={item.age} />
+                                                </Box>
+                                            </HStack>
+                                            <HStack mt='10px'>
+                                                <Box width='25%'>
+                                                    <DefText text={'주소'} style={[styles.memberTitle]} />
+                                                </Box>
+                                                <Box width='73%'>
+                                                    <HStack>
+                                                        <DefText text={item.wr_addr1} />
+                                                        {
+                                                            item.wr_addr2 != '' &&
+                                                            <DefText text={ ' ' + item.wr_addr2} />
+                                                        }
+                                                        <DefText text={item.wr_addr3} />
+                                                    </HStack>
+                                                </Box>
+                                            </HStack>
+                                            <Box position={'absolute'} top='15px' right='15px'>
+                                                <TouchableOpacity onPress={()=>selectClientHandler(item.wr_subject, item.wr_id)} style={{paddingHorizontal:15, paddingVertical:5, backgroundColor:colorSelect.blue, borderRadius:5}}>
+                                                    <DefText text='선택' style={[styles.buttonsText]} />
+                                                </TouchableOpacity>
+                                            </Box>
+                                        </Box>
+                                    )
+                                })
+                                :
+                                <Box py='40px' justifyContent={'center'} alignItems='center'>
+                                    <DefText text='검색된 회원정보가 없습니다.' />
+                                </Box>
+                            }
+                        </Box>
+                    </Modal.Body>
+                </Modal.Content>
+            </Modal>
             <Modal isOpen={addrModal} onClose={() => setAddrModal(false)} flex={1}>
                 <SafeAreaView style={{width:width, flex:1}}>
                     <HStack justifyContent='space-between' height='55px' alignItems='center' style={{borderBottomWidth:1, borderBottomColor:'#e3e3e3', backgroundColor:'#fff'}} >
@@ -308,8 +466,19 @@ const styles = StyleSheet.create({
     buttonsText: {
         color:colorSelect.white,
         fontSize:fsize.fs12
+    },
+    memberTitle: {
+        ...fweight.b
     }
 })
 
-
-export default ScheduleAdd;
+export default connect(
+    ({ User }) => ({
+        userInfo: User.userInfo, //회원정보
+    }),
+    (dispatch) => ({
+        member_login: (user) => dispatch(UserAction.member_login(user)), //로그인
+        member_info: (user) => dispatch(UserAction.member_info(user)), //회원 정보 조회
+        
+    })
+)(ScheduleAdd);

@@ -11,6 +11,8 @@ import {connect} from 'react-redux';
 import { actionCreators as UserAction } from '../redux/module/action/UserAction';
 import { StackActions } from '@react-navigation/native';
 import Api from '../Api';
+import DocumentPicker from 'react-native-document-picker';
+
 
 const {width} = Dimensions.get('window');
 
@@ -70,6 +72,14 @@ const MemoForm = (props) => {
     }
 
     const memoSend = () => {
+
+        let filess = '';
+
+        
+        filess = {"uri":singleFile[0].uri, 'type':singleFile[0].type, 'name':singleFile[0].name};
+
+        //console.log('filess', filess);
+
         Api.send('com_memoForm', {'title':memoTitle, 'content':content, 'send_id':memberName, 'send_idx':memberId, 'id':userInfo.mb_id, 'names':userInfo.mb_name}, (args)=>{
             let resultItem = args.resultItem;
             let arrItems = args.arrItems;
@@ -77,14 +87,52 @@ const MemoForm = (props) => {
             if(resultItem.result === 'Y' && arrItems) {
                 console.log('커뮤니케이션 메모리스트: ', resultItem);
                 //setMemoData(arrItems);
-                ToastMessage(resultItem.message);
+                //ToastMessage(resultItem.message);
 
             }else{
                 console.log('커뮤니케이션 메모 실패!', resultItem);
-                ToastMessage(resultItem.message);
+                //ToastMessage(resultItem.message);
             }
         });
     }
+
+    //파일첨부
+    const [singleFile, setSingleFile] = useState('');
+    const [fileNames, setFileNames] = useState('');
+
+    const selectOneFile = async () => {
+        //Opening Document Picker for selection of one file
+        try {
+          const res = await DocumentPicker.pick({
+            type: DocumentPicker.types.allFiles,
+            //There can me more options as well
+            // DocumentPicker.types.allFiles
+            // DocumentPicker.types.images
+            // DocumentPicker.types.plainText
+            // DocumentPicker.types.audio
+            // DocumentPicker.types.pdf
+          });
+          //Printing the log realted to the file
+          console.log('res : ' + JSON.stringify(res));
+          console.log('URI : ' + res[0].uri);
+          console.log('Type : ' + res[0].type);
+          console.log('File Name : ' + res[0].name);
+          console.log('File Size : ' + res[0].size);
+          //Setting the state to show single file attributes
+          setSingleFile(res);
+          setFileNames(res[0].name);
+        } catch (err) {
+          //Handling any exception (If any)
+          if (DocumentPicker.isCancel(err)) {
+            //If user canceled the document selection
+            alert('파일첨부를 취소하셨습니다.');
+          } else {
+            //For Unknown Error
+            alert('Unknown Error: ' + JSON.stringify(err));
+            throw err;
+          }
+        }
+      };
 
     return (
         <Box flex={1} backgroundColor='#fff'>
@@ -130,9 +178,15 @@ const MemoForm = (props) => {
                     </Box>
                     <Box mt='30px'>
                         <DefText text='파일첨부' style={[styles.labelTitle]} />
-                        <TouchableOpacity style={[styles.fileupload]}>
+                        <TouchableOpacity onPress={selectOneFile} style={[styles.fileupload]}>
                             <HStack alignItems={'center'} justifyContent='space-between'>
-                                <DefText text='첨부하실 파일을 업로드하세요.' style={[styles.buttonsText, {color:'#999'}]} />
+                                {
+                                    fileNames != '' ?
+                                    <DefText text={fileNames} style={[styles.buttonsText, {color:'#333'}]} />
+                                    :
+                                    <DefText text='첨부하실 파일을 업로드하세요.' style={[styles.buttonsText, {color:'#999'}]} />
+                                }
+                                
                                 <Image source={require('../images/fileUpload.png')} alt='파일업로드' style={{width:12, height:12, resizeMode:'contain'}} />
                             </HStack>
                         </TouchableOpacity>

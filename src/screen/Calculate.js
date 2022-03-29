@@ -8,6 +8,11 @@ import { calculateData } from '../Utils/DummyData';
 import { numberFormat, textLengthOverCut } from '../common/dataFunction';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 
+import {connect} from 'react-redux';
+import { actionCreators as UserAction } from '../redux/module/action/UserAction';
+import { StackActions } from '@react-navigation/native';
+import Api from '../Api';
+
 const {width} = Dimensions.get('window');
 const theadWidth = width * 1.5;
 
@@ -39,11 +44,11 @@ String.prototype.zf = function(len){return "0".string(len - this.length) + this;
 Number.prototype.zf = function(len){return this.toString().zf(len);};
 
 let today = new Date();
-let todayText = today.format('yyyy.MM');
+let todayText = today.format('yyyy-MM');
 
 const Calculate = (props) => {
 
-    const {navigation} = props;
+    const {navigation, userInfo} = props;
 
     const [category, setCategory] = useState('');
 
@@ -75,7 +80,7 @@ const Calculate = (props) => {
 
     const startDateHandler = (date) => {
         startDataModalClose();
-        setStartDate(date.format("yyyy.MM"))
+        setStartDate(date.format("yyyy-MM"))
     }
 
     const startDataModalClose = () => {
@@ -88,18 +93,54 @@ const Calculate = (props) => {
     const endDateHandler = (date) => {
         endDataModalClose();
 
-        if(date.format("yyyy.MM.dd") < startDate){
+        if(date.format("yyyy-MM-dd") < startDate){
             ToastMessage('시작일 이후의 날짜를 선택해주세요.');
             return false;
         }
 
-        setEndDate(date.format("yyyy.MM"));
+        setEndDate(date.format("yyyy-MM"));
         
     }
 
     const endDataModalClose = () => {
         setEndDataModal(false)
     }
+
+    const [points, setPoints] = useState('');
+    const [calList, setCalList] = useState([]);
+    const [sumPrice, setSumPrice] = useState('');
+    const calRec = async () => {
+        await Api.send('price_point', {'idx':userInfo.mb_no}, (args)=>{
+            let resultItem = args.resultItem;
+            let arrItems = args.arrItems;
+    
+            if(resultItem.result === 'Y' && arrItems) {
+               //console.log('포인트 출력 결과: ', arrItems, resultItem);
+               setPoints(arrItems);
+            }else{
+                console.log('포인트 출력 실패!', resultItem);
+
+            }
+        });
+
+        await Api.send('price_list', {'idx':userInfo.mb_no, 'date':startDate, 'edate':endDate}, (args)=>{
+            let resultItem = args.resultItem;
+            let arrItems = args.arrItems;
+    
+            if(resultItem.result === 'Y' && arrItems) {
+               console.log('정산 리스트 결과: ', arrItems);
+               setCalList(arrItems.adjust);
+               setSumPrice(arrItems.sumPrice)
+            }else{
+                console.log('정산 리스트 결과 출력 실패!', resultItem);
+
+            }
+        });
+    }
+
+    useEffect(()=>{
+        calRec();
+    }, [startDate, endDate])
 
     return (
         <Box flex={1} backgroundColor='#fff'>
@@ -111,13 +152,13 @@ const Calculate = (props) => {
                             <Box style={[styles.halfWidth]}>
                                 <DefText text='보유 포인트' style={[fweight.b]}/>
                                 <TouchableOpacity onPress={()=>navigation.navigate('PointList')}>
-                                    <DefText text={numberFormat(500000) + 'P'} style={[styles.halfText, {color:colorSelect.orange}]} />
+                                    <DefText text={ points != '' ? numberFormat(points) + 'P' : '0'} style={[styles.halfText, {color:colorSelect.orange}]} />
                                 </TouchableOpacity>
                             </Box>
                             <Box style={{width:1, height:40, backgroundColor:'#191919'}} />
                             <Box style={[styles.halfWidth]}>
                                 <DefText text='정산 예정 금액' style={[fweight.b]} />
-                                <DefText text={numberFormat(315000) + 'P'} style={[styles.halfText, {color:colorSelect.blue}]} />
+                                <DefText text={ sumPrice != '' ? numberFormat(sumPrice) + 'P' : '0'} style={[styles.halfText, {color:colorSelect.blue}]} />
                             </Box>
                         </HStack>
                     </Box>
@@ -141,71 +182,80 @@ const Calculate = (props) => {
                         </TouchableOpacity>
                     </HStack>
                 </Box>
-                <Box mt='20px'>
-                    <ScrollView
-                        horizontal={true}
-                        showsHorizontalScrollIndicator={false}
-                    >  
-                        <Box borderTopWidth={1} borderTopColor='#C9C9C9'>
-                            <HStack alignItems={'center'} style={[styles.thead]}>
-                                <Box style={[styles.theadBox]} >
-                                    <DefText text='NO' style={[{color:'#9A9A9A'}, fweight.b]} />
+                {
+                    calList != '' ?
+                    <Box mt='20px'>
+                        <ScrollView
+                            horizontal={true}
+                            showsHorizontalScrollIndicator={false}
+                        >  
+                            <Box borderTopWidth={1} borderTopColor='#C9C9C9'>
+                                <HStack alignItems={'center'} style={[styles.thead]}>
+                                    <Box style={[styles.theadBox]} >
+                                        <DefText text='NO' style={[{color:'#9A9A9A'}, fweight.b]} />
+                                    </Box>
+                                    <Box style={[styles.theadBox]}>
+                                        <DefText text='일자' style={[{color:'#9A9A9A'}, fweight.b]}  />
+                                    </Box>
+                                    <Box style={[styles.theadBox]}>
+                                        <DefText text='고객명' style={[{color:'#9A9A9A'}, fweight.b]}  />
+                                    </Box>
+                                    <Box style={[styles.theadBox]}>
+                                        <DefText text='종류' style={[{color:'#9A9A9A'}, fweight.b]}  />
+                                    </Box>
+                                    <Box style={[styles.theadBox]}>
+                                        <DefText text='처리' style={[{color:'#9A9A9A'}, fweight.b]}  />
+                                    </Box>
+                                    <Box style={[styles.theadBox]}>
+                                        <DefText text='단가' style={[{color:'#9A9A9A'}, fweight.b]}  />
+                                    </Box>
+                                    <Box style={[styles.theadBox]}>
+                                        <DefText text='할인' style={[{color:'#9A9A9A'}, fweight.b]}  />
+                                    </Box>
+                                </HStack>
+                                <Box>
+                                    {
+                                        calList != '' &&
+                                        calList.map((item, index)=> {
+                                            return(
+                                                <Box key={index} borderBottomWidth={1} borderBottomColor='#FAFAFA'>
+                                                    <HStack>
+                                                        <Box style={[styles.theadBox]} >
+                                                            <DefText text={index + 1} style={[fweight.b, {color:'#666666'}]} />
+                                                        </Box>
+                                                        <Box style={[styles.theadBox]}>
+                                                            <DefText text={item.date} style={[fweight.b, {color:'#666666'}]}  />
+                                                        </Box>
+                                                        <Box style={[styles.theadBox]}>
+                                                            <DefText text={item.wr_5} style={[fweight.b, {color:'#666666'}]}  />
+                                                        </Box>
+                                                        <Box style={[styles.theadBox]}>
+                                                            <DefText text={item.cname} style={[fweight.b, {color:'#666666'}]} />
+                                                        </Box>
+                                                        <Box style={[styles.theadBox]}>
+                                                            <DefText text={item.type} style={[fweight.b, {color:'#666666'}]}  />
+                                                        </Box>
+                                                        <Box style={[styles.theadBox]}>
+                                                            <DefText text={numberFormat(item.wr_1)} style={[fweight.b, {color:'#666666'}]}  />
+                                                        </Box>
+                                                        <Box style={[styles.theadBox]}>
+                                                            <DefText text={item.wr_7 + '%'} style={[fweight.b, {color:'#666666'}]}  />
+                                                        </Box>
+                                                    </HStack>
+                                                </Box>
+                                            )
+                                        })
+                                    }
                                 </Box>
-                                <Box style={[styles.theadBox]}>
-                                    <DefText text='일자' style={[{color:'#9A9A9A'}, fweight.b]}  />
-                                </Box>
-                                <Box style={[styles.theadBox]}>
-                                    <DefText text='고객명' style={[{color:'#9A9A9A'}, fweight.b]}  />
-                                </Box>
-                                <Box style={[styles.theadBox]}>
-                                    <DefText text='종류' style={[{color:'#9A9A9A'}, fweight.b]}  />
-                                </Box>
-                                <Box style={[styles.theadBox]}>
-                                    <DefText text='처리' style={[{color:'#9A9A9A'}, fweight.b]}  />
-                                </Box>
-                                <Box style={[styles.theadBox]}>
-                                    <DefText text='단가' style={[{color:'#9A9A9A'}, fweight.b]}  />
-                                </Box>
-                                <Box style={[styles.theadBox]}>
-                                    <DefText text='할인' style={[{color:'#9A9A9A'}, fweight.b]}  />
-                                </Box>
-                            </HStack>
-                            <Box>
-                                {
-                                    calculateData.map((item, index) => {
-                                        return(
-                                            <Box key={index} borderBottomWidth={1} borderBottomColor='#FAFAFA'>
-                                                <HStack>
-                                                    <Box style={[styles.theadBox]} >
-                                                        <DefText text={item.idx} style={[fweight.b, {color:'#666666'}]} />
-                                                    </Box>
-                                                    <Box style={[styles.theadBox]}>
-                                                        <DefText text={item.date} style={[fweight.b, {color:'#666666'}]}  />
-                                                    </Box>
-                                                    <Box style={[styles.theadBox]}>
-                                                        <DefText text={item.name} style={[fweight.b, {color:'#666666'}]}  />
-                                                    </Box>
-                                                    <Box style={[styles.theadBox]}>
-                                                        <DefText text={item.type} style={[fweight.b, {color:'#666666'}]} />
-                                                    </Box>
-                                                    <Box style={[styles.theadBox]}>
-                                                        <DefText text={item.status} style={[fweight.b, {color:'#666666'}]}  />
-                                                    </Box>
-                                                    <Box style={[styles.theadBox]}>
-                                                        <DefText text={item.price} style={[fweight.b, {color:'#666666'}]}  />
-                                                    </Box>
-                                                    <Box style={[styles.theadBox]}>
-                                                        <DefText text={item.percent} style={[fweight.b, {color:'#666666'}]}  />
-                                                    </Box>
-                                                </HStack>
-                                            </Box>
-                                        )
-                                    })
-                                }
                             </Box>
-                        </Box>
-                    </ScrollView>
-                </Box>
+                        </ScrollView>
+                    </Box>
+                    :
+                    <Box py='60px' alignItems={'center'}>
+                        <DefText text='정산내역이 없습니다.' />
+                    </Box>
+                }
+                
             </ScrollView>
   
             <DateTimePickerModal
@@ -254,4 +304,13 @@ const styles = StyleSheet.create({
     }
 })
 
-export default Calculate;
+export default connect(
+    ({ User }) => ({
+        userInfo: User.userInfo, //회원정보
+    }),
+    (dispatch) => ({
+        member_login: (user) => dispatch(UserAction.member_login(user)), //로그인
+        member_info: (user) => dispatch(UserAction.member_info(user)), //회원 정보 조회
+        
+    })
+)(Calculate);

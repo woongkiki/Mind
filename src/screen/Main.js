@@ -45,6 +45,12 @@ import MemberSetting from './MemberSetting';
 import ScheduleAdd from './ScheduleAdd';
 import Intro from './Intro';
 import MemoForm from './MemoForm';
+import PointUseList from './PointUseList';
+import Statistics from './Statistics';
+import Dashboard from './Dashboard';
+import IdLost from './IdLost';
+import PasswordLost from './PasswordLost';
+import ScheduleInfo from './ScheduleInfo';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -250,11 +256,18 @@ function Stack_Navigation(props) {
             <Stack.Screen name="MyEducation" component={MyEducation} /> 
             <Stack.Screen name="Calculate" component={Calculate} /> 
             <Stack.Screen name="PointList" component={PointList} /> 
+            <Stack.Screen name="PointUseList" component={PointUseList} /> 
             <Stack.Screen name="PointRequest" component={PointRequest} /> 
             <Stack.Screen name="Setting" component={Setting} /> 
             <Stack.Screen name="MemberSetting" component={MemberSetting} /> 
             <Stack.Screen name="ScheduleAdd" component={ScheduleAdd} /> 
-            
+            <Stack.Screen name="ScheduleInfo" component={ScheduleInfo} /> 
+            <Stack.Screen name="Statistics" component={Statistics} /> 
+            <Stack.Screen name="Dashboard" component={Dashboard} /> 
+            <Stack.Screen name="IdLost" component={IdLost} /> 
+            <Stack.Screen name="PasswordLost" component={PasswordLost} /> 
+
+           
         </Stack.Navigator>
     )
 }

@@ -121,31 +121,31 @@ const Comunication = (props) => {
                                 </HStack>
                                 <DefText text='확인하세요!' style={[{fontSize:fsize.fs22, marginTop:5}]}  />
                             </Box>
-                            <TouchableOpacity style={[styles.commuTopBox]}>
-                                <HStack alignItems={'center'} justifyContent='space-between'>
+                            <TouchableOpacity disabled={true} style={[styles.commuTopBox]}>
+                                <HStack alignItems={'center'} justifyContent='space-between' >
                                     <HStack alignItems={'center'}>
-                                        <Image source={require('../images/memoIcons.png')} alt='쪽지' style={{width:29, height:26, resizeMode:'contain', marginRight:15}} />
-                                        <DefText text='쪽지함' style={[{fontSize:fsize.fs16, color:colorSelect.white}]} />
+                                        <Image source={require('../images/memoIcons.png')} alt='쪽지' style={{width:29, height:26, resizeMode:'contain', marginRight:10}} />
+                                        <DefText text='쪽지함' style={[{fontSize:fsize.fs14, color:colorSelect.white}]} />
                                     </HStack>
                                     <DefText text={homeMemoCnt} style={[{color:colorSelect.white}, fweight.eb]} />
                                 </HStack>
                             </TouchableOpacity>
                         </HStack>
                         <HStack justifyContent='space-between' alignItems={'center'} mt='15px'>
-                            <TouchableOpacity style={[styles.commuTopBox,  {backgroundColor:'#5893EA'}]}>
+                            <TouchableOpacity disabled={true} style={[styles.commuTopBox,  {backgroundColor:'#5893EA'}]}>
                                 <HStack alignItems={'center'} justifyContent='space-between'>
                                     <HStack alignItems={'center'}>
-                                        <Image source={require('../images/branchIcons.png')} alt='지사' style={{width:27, height:27, resizeMode:'contain', marginRight:15}} />
-                                        <DefText text='지사 게시판' style={[{fontSize:fsize.fs16, color:colorSelect.white}]} />
+                                        <Image source={require('../images/branchIcons.png')} alt='지사' style={{width:27, height:27, resizeMode:'contain', marginRight:10}} />
+                                        <DefText text='지사 게시판' style={[{fontSize:fsize.fs14, color:colorSelect.white}]} />
                                     </HStack>
                                     <DefText text={homeBrandCnt} style={[{color:colorSelect.white}, fweight.eb]} />
                                 </HStack>
                             </TouchableOpacity>
-                            <TouchableOpacity style={[styles.commuTopBox,  {backgroundColor:colorSelect.blue}]}>
+                            <TouchableOpacity disabled={true} style={[styles.commuTopBox,  {backgroundColor:colorSelect.blue}]}>
                                 <HStack alignItems={'center'} justifyContent='space-between'>
                                     <HStack alignItems={'center'}>
-                                        <Image source={require('../images/officeIcons.png')} alt='본사' style={{width:27, height:27, resizeMode:'contain', marginRight:15}} />
-                                        <DefText text='본사 게시판' style={[{fontSize:fsize.fs16, color:colorSelect.white}]} />
+                                        <Image source={require('../images/officeIcons.png')} alt='본사' style={{width:27, height:27, resizeMode:'contain', marginRight:10}} />
+                                        <DefText text='본사 게시판' style={[{fontSize:fsize.fs14, color:colorSelect.white}]} />
                                     </HStack>
                                     <DefText text={homeOfficeCnt} style={[{color:colorSelect.white}, fweight.eb]} />
                                 </HStack>

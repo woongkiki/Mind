@@ -7,11 +7,18 @@ import {fsize, fweight, colorSelect, textStyle} from '../common/StyleDef';
 import { pointRequest } from '../Utils/DummyData';
 import { numberFormat, textLengthOverCut } from '../common/dataFunction';
 
+import {connect} from 'react-redux';
+import { actionCreators as UserAction } from '../redux/module/action/UserAction';
+import { StackActions } from '@react-navigation/native';
+import Api from '../Api';
+import ToastMessage from '../components/ToastMessage';
+
+
 const {width} = Dimensions.get('window');
 
 const PointRequest = (props) => {
 
-    const {navigation} = props;
+    const {navigation, userInfo} = props;
 
     const [reqPoint, setReqPoint] = useState('');
     const pointChangeHandler = (point) => {
@@ -20,12 +27,28 @@ const PointRequest = (props) => {
 
     const pointRequestSend = () => {
         if(reqPoint == ''){
-            Alert.alert('요청하실 포인트를 입력하세요.');
+            ToastMessage('요청하실 포인트를 입력하세요.');
             return false;
         }
 
-        Alert.alert(reqPoint + '포인트가 요청되었습니다.')
+        Api.send('price_pointRequest', {'idx':userInfo.mb_no, 'mb_name':userInfo.mb_name, 'mb_id':userInfo.mb_id,'reqPoint':reqPoint}, (args)=>{
+            let resultItem = args.resultItem;
+            let arrItems = args.arrItems;
+    
+            if(resultItem.result === 'Y' && arrItems) {
+               console.log('포인트 요청 결과: ', arrItems, resultItem);
+               //setPoints(arrItems);
+               ToastMessage(resultItem.message);
+               navigation.goBack();
+            }else{
+                console.log('포인트 요청 출력 실패!', resultItem);
+
+            }
+        });
     }
+
+
+    
 
     const _renderItem = ({item, index}) => {
         return(
@@ -134,4 +157,13 @@ const styles = StyleSheet.create({
     
 })
 
-export default PointRequest;
+export default connect(
+    ({ User }) => ({
+        userInfo: User.userInfo, //회원정보
+    }),
+    (dispatch) => ({
+        member_login: (user) => dispatch(UserAction.member_login(user)), //로그인
+        member_info: (user) => dispatch(UserAction.member_info(user)), //회원 정보 조회
+        
+    })
+)(PointRequest);

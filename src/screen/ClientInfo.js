@@ -1,7 +1,7 @@
 import React, {useState, useEffect} from 'react';
-import { ScrollView, Platform, Dimensions, StyleSheet, Alert, View, TouchableOpacity, Linking, ActivityIndicator } from 'react-native';
+import { ScrollView, Platform, Dimensions, StyleSheet, Alert, View, TouchableOpacity, Linking, ActivityIndicator, PermissionsAndroid } from 'react-native';
 import { Box, VStack, HStack, Image, Modal } from 'native-base';
-import { DefText, SearchInput, SubmitButtons } from '../common/BOOTSTRAP';
+import { DefInput, DefText, SearchInput, SubmitButtons } from '../common/BOOTSTRAP';
 import Font from '../common/Font';
 import HeaderDef from '../components/HeaderDef';
 import {fsize, fweight, colorSelect, textStyle} from '../common/StyleDef';
@@ -15,6 +15,9 @@ import { StackActions } from '@react-navigation/native';
 import Api from '../Api';
 import ToastMessage from '../components/ToastMessage';
 
+import { BASE_URL } from '../Utils/APIConstant';
+import RNFetchBlob from 'rn-fetch-blob'
+
 const {width} = Dimensions.get('window');
 const categoryBtn = (width - 40) * 0.32;
 const categoryPadding = (width - 40) * 0.02;
@@ -25,7 +28,84 @@ const ClientInfo = (props) => {
 
     const {params} = route;
 
-    //console.log('params', params);
+    //파일 다운로드
+    //퍼미션 체크
+    const checkPermission = async (files, fileName) => {
+        
+        let fileUrl = files;
+        // Function to check the platform
+        // If Platform is Android then check for permissions.
+    
+        if (Platform.OS === 'ios') {
+          downloadFile(fileUrl, fileName);
+        } else {
+          try {
+            const granted = await PermissionsAndroid.request(
+              PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+              {
+                title: 'Storage Permission Required',
+                message:
+                  'Application needs access to your storage to download File',
+              }
+            );
+            if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+              // Start downloading
+              downloadFile(fileUrl, fileName);
+              console.log('Storage Permission Granted.');
+            } else {
+              // If permission denied then show alert
+              Alert.alert('Error','Storage Permission Not Granted');
+            }
+          } catch (err) {
+            // To handle permission related exception
+            console.log("++++"+err);
+          }
+        }
+    };
+
+    const downloadFile = (fileUrl, fileName) => {
+   
+        // Get today's date to add the time suffix in filename
+        let date = new Date();
+        // File URL which we want to download
+        let FILE_URL = fileUrl;    
+        // Function to get extention of the file url
+        let file_ext = getFileExtention(FILE_URL);
+       
+        file_ext = '.' + file_ext[0];
+       
+        // config: To get response by passing the downloading related options
+        // fs: Root directory path to download
+        const { config, fs } = RNFetchBlob;
+        let RootDir = Platform.OS === 'ios' ? fs.dirs.DocumentDir : fs.dirs.DownloadDir;
+        let options = {
+          fileCache: true,
+          addAndroidDownloads: {
+            path:
+              RootDir+
+              '/' + fileName +
+              file_ext,
+            description: 'downloading file...',
+            notification: true,
+            // useDownloadManager works with Android only
+            useDownloadManager: true,   
+          },
+        };
+        config(options)
+          .fetch('GET', FILE_URL)
+          .then(res => {
+            // Alert after successful downloading
+            console.log('res -> ', JSON.stringify(res));
+            ToastMessage('파일 다운로드가 완료되었습니다.');
+            console.log(dirs.DocumentDir);
+          });
+      };
+
+      const getFileExtention = fileUrl => {
+        // To get the file extension
+        return /[.]/.exec(fileUrl) ?
+                 /[^.]+$/.exec(fileUrl) : undefined;
+      };
 
     //진행상태변경 모달
     const [statusModal, setStatusModal] = useState(false);
@@ -46,7 +126,7 @@ const ClientInfo = (props) => {
             let arrItems = args.arrItems;
     
             if(resultItem.result === 'Y' && arrItems) {
-                console.log('진행상태리스트: ', arrItems, resultItem);
+                //console.log('진행상태리스트: ', arrItems, resultItem);
                 setStatusList(arrItems);
             }else{
                 console.log('진행상태리스트 API 통신 오류!', resultItem);
@@ -73,6 +153,19 @@ const ClientInfo = (props) => {
 
     const [DBLoading, setDBLoading] = useState(true);
     const [DBInfo, setDBInfo] = useState('');
+    //설계사 메모 추가
+    const [fpMemoStatus, setFpMemoStatus] = useState('c');
+    const [fpMemoidx, setFpMemoIdx] = useState('');
+    const [fpMemoAdd, setFpMemoAdd] = useState(false);
+    const [fpMemo, setFpMemo] = useState('');
+    const fpMemoChange = (text) => {
+        setFpMemo(text);
+    }
+
+    const [fpMemoListData, setFpMemoData] = useState([]);
+
+    const [fpScheduleList, setFpScheduleList] = useState([]); // 스케줄 리스트
+    const [fileUrls, setFileUrls] = useState('');
     const ClientInfoReceive = async () => {
         await setDBLoading(true);
         await Api.send('db_info', {'idx':params.idx}, (args)=>{
@@ -80,8 +173,38 @@ const ClientInfo = (props) => {
             let arrItems = args.arrItems;
     
             if(resultItem.result === 'Y' && arrItems) {
-                //console.log('db 상세: ', arrItems, resultItem);
-                setDBInfo(arrItems)
+                console.log('db 상세: ', arrItems, resultItem);
+                setDBInfo(arrItems);
+                if(arrItems.file_down != ''){
+                    setFileUrls(BASE_URL + '/data/file/prfrm/' + arrItems.file_down);
+                }
+            }else{
+                console.log('API 통신 오류!', resultItem);
+
+            }
+        });
+        await Api.send('db_fpMemo', {'idx':params.idx}, (args)=>{
+            let resultItem = args.resultItem;
+            let arrItems = args.arrItems;
+    
+            if(resultItem.result === 'Y' && arrItems) {
+               // console.log('fp 메모 리스트: ', arrItems);
+                
+                setFpMemoData(arrItems);
+               // setDBInfo(arrItems)
+            }else{
+                console.log('API 통신 오류!', resultItem);
+
+            }
+        });
+
+        await Api.send('db_fpSchedule', {'idx':params.idx, 'midx':userInfo.mb_no}, (args)=>{
+            let resultItem = args.resultItem;
+            let arrItems = args.arrItems;
+    
+            if(resultItem.result === 'Y' && arrItems) {
+               //console.log('fp 스케줄 리스트: ', arrItems);
+               setFpScheduleList(arrItems);
             }else{
                 console.log('API 통신 오류!', resultItem);
 
@@ -89,10 +212,68 @@ const ClientInfo = (props) => {
         });
         await setDBLoading(false);
     }
+   
+    //메모 수정 및 추가
+    const fpMemoForm = () => {
+        Api.send('db_fpMemoInsert', {'idx':params.idx, 'mb_id':userInfo.mb_id,'m_status':fpMemoStatus, 'fpMemo':fpMemo, 'midx':fpMemoidx}, (args)=>{
+            let resultItem = args.resultItem;
+            let arrItems = args.arrItems;
+    
+            if(resultItem.result === 'Y' && arrItems) {
+               // console.log('fp 메모 수정 하기: ', resultItem);
+                setFpMemoAdd(false);
+                ClientInfoReceive();
+                ToastMessage(resultItem.message);
+            }else{
+                console.log('fp 메모 수정 통신 오류!', resultItem);
+
+            }
+        });
+    }
+
+    const [fpMemoDelStatus, setFpMemoDelStatus] = useState(false);
+    const fpMemoDel = () => {
+        Api.send('db_fpMemoDel', {'idx':params.idx, 'cidx':fpMemoidx}, (args)=>{
+            let resultItem = args.resultItem;
+            let arrItems = args.arrItems;
+    
+            if(resultItem.result === 'Y' && arrItems) {
+                console.log('fp 메모 삭제: ', resultItem);
+                ToastMessage(resultItem.message);
+                setFpMemoDelStatus(false);
+                ClientInfoReceive();
+            }else{
+                console.log('fp 메모 삭제 오류!', resultItem);
+
+            }
+        });
+    }
+
+    //메모 수정
+    const memoInsert = async (p, midx) => {
+        await setFpMemo(p);
+        await setFpMemoIdx(midx);
+        await setFpMemoStatus('cu');
+        await setFpMemoAdd(true);
+    }
+
+    //메모 추가
+    const fpMemoAddHandler = async () => {
+        await setFpMemo('');
+        await setFpMemoIdx('');
+        await setFpMemoStatus('c');
+        await setFpMemoAdd(true);
+    }
+
+    //메모 삭제
+    const fpMemoDelHandler = async (idx) => {
+        await setFpMemoIdx(idx);
+        await setFpMemoDelStatus(true)
+    }
 
     useEffect(()=>{
-        statusListReceive();
-        ClientInfoReceive();
+        statusListReceive(); //진행상태변경
+        ClientInfoReceive(); //고객상세정보
     }, [])
 
     return (
@@ -141,13 +322,13 @@ const ClientInfo = (props) => {
                                 </Box>
                                 <Box style={[styles.infoBox, {backgroundColor:'#004375'}]}>
                                     <HStack alignItems={'center'}>
-                                        <DefText text='100만' style={{color:colorSelect.white}} />
+                                        <DefText text={DBInfo?.wr_5 ? DBInfo.wr_5 : '-'} style={{color:colorSelect.white}} />
                                         <Image source={require('../images/bohumUp.png')} alt='이상' style={{width:9, height:8, resizeMode:'contain', marginLeft:10}} />
                                     </HStack>
                                     <DefText text='보험료' style={[fweight.b, {color:colorSelect.white, marginTop:5}]} />
                                 </Box>
-                        
-                                <TouchableOpacity style={[styles.infoBox, {backgroundColor:colorSelect.orange}]}>
+                                
+                                <TouchableOpacity onPress={ DBInfo.file_name != '' ? () => checkPermission(fileUrls, DBInfo.file_name) : () => ToastMessage('등록된 녹취파일이 없습니다.')} style={[styles.infoBox, {backgroundColor:colorSelect.orange}]}>
                                     <Image source={require('../images/audioIconW.png')} alt='녹음재생' style={{width:30, height:26, resizeMode:'contain'}} />
                                     <DefText text='녹음재생' style={[fweight.b, {color:colorSelect.white, marginTop:5}]}  />
                                 </TouchableOpacity>
@@ -174,7 +355,7 @@ const ClientInfo = (props) => {
                             }
                         </HStack>
                         <Box>
-                            <HStack flexWrap={'wrap'} mt='15px'>
+                            <HStack flexWrap={'wrap'} mt='15px' alignItems={'center'}>
                                 <Box width='25%' >
                                     <DefText text='주소' />
                                 </Box>
@@ -267,84 +448,133 @@ const ClientInfo = (props) => {
                         </Box>
                     </Box>
                     <Box mt='15px' backgroundColor={'#fff'} shadow={9}>
-                        <Box p='20px'>
-                            <HStack mb='15px' alignItems={'center'}>
+                        <Box px='20px' pt='20px'>
+                            <HStack alignItems={'center'}>
                                 <Box style={[styles.infoTitleBox, {backgroundColor:colorSelect.orange}]}>
                                     <DefText text='설계사 메모' style={[styles.infoTitle]}  />
                                 </Box>
-                                <TouchableOpacity style={{marginLeft:10}}>
+                                <TouchableOpacity style={{marginLeft:10}} onPress={()=>fpMemoAddHandler()}>
                                     <Image source={require('../images/memoAdd.png')} alt='설계사 메모 추가' style={[{width:18, height:18, resizeMode:'contain'}]} />
                                 </TouchableOpacity>
                             </HStack>
-                            <Box>
-                                <DefText text={'홍길동\n770723\n010-1324-5678\n서울 특별시 구로구 구로동 (직장 근처 상담 요청)\n★상담요청시간 : 다음주 / 상시 통화 가능 / 매니저 님과 일정\n조율 / 직장인 / 월 납입 100만원대 / 가족 점검 요청★'} style={{lineHeight:23}} />
-                                <DefText text='2020. 02. 02 오후 1시' style={[{marginTop:20, fontSize:fsize.fs12}]} />
-                            </Box>
+                            
                         </Box>
-                        <HStack>
-                            <TouchableOpacity style={[styles.memoButton, {backgroundColor:'#004375'}]}>
-                                <DefText text='수정' style={[styles.memoButtonText]} />
-                            </TouchableOpacity>
-                            <TouchableOpacity style={[styles.memoButton, {backgroundColor:'#333'}]}>
-                                <DefText text='삭제' style={[styles.memoButtonText]} />
-                            </TouchableOpacity>
-                        </HStack>
+                        {
+                            fpMemoListData != '' &&
+                            fpMemoListData.length > 0 ?
+                            fpMemoListData.map((item, index)=> {
+                                return(
+                                    <Box key={index}>
+                                        <Box px='20px' pt='20px' pb='20px'>
+                                            <Box>
+                                                <DefText text={item.wr_content} style={{lineHeight:23}} />
+                                                <DefText text={item.wr_datetime} style={[{marginTop:10, fontSize:fsize.fs12}]} />
+                                            </Box>
+                                        </Box>
+                                        <HStack>
+                                            <TouchableOpacity onPress={()=>memoInsert(item.wr_content, item.wr_id)} style={[styles.memoButton, {backgroundColor:'#004375'}]}>
+                                                <DefText text='수정' style={[styles.memoButtonText]} />
+                                            </TouchableOpacity>
+                                            <TouchableOpacity onPress={()=>fpMemoDelHandler(item.wr_id)} style={[styles.memoButton, {backgroundColor:'#333'}]}>
+                                                <DefText text='삭제' style={[styles.memoButtonText]} />
+                                            </TouchableOpacity>
+                                        </HStack>
+                                    </Box>
+                                )
+                            })
+                            :
+                            <Box p='40px' alignItems={'center'} >
+                                <DefText text='등록된 메모가 없습니다.' />
+                            </Box>
+                        }
+                        
                     </Box>
 
                     <Box mt='15px' backgroundColor={'#fff'} shadow={9} p='20px'>
-                        <HStack mb='15px' alignItems={'center'}>
+                        <HStack alignItems={'center'}>
                             <Box style={[styles.infoTitleBox, {backgroundColor:colorSelect.blue}]}>
                                 <DefText text='스케줄 정보' style={[styles.infoTitle]}  />
                             </Box>
-                            <TouchableOpacity style={{marginLeft:10}}>
+                            {/* <TouchableOpacity style={{marginLeft:10}}>
                                 <Image source={require('../images/memoAdd.png')} alt='스케줄 추가' style={[{width:18, height:18, resizeMode:'contain'}]} />
-                            </TouchableOpacity>
+                            </TouchableOpacity> */}
                         </HStack>
-                        <HStack flexWrap={'wrap'}>
-                            <Box width='25%' >
-                                <DefText text='일정' />
+                        {
+                            fpScheduleList != '' && 
+                            fpScheduleList.length > 0 ?
+                            fpScheduleList.map((item, index) => {
+                                return(
+                                    <Box key={index} mt='15px'>
+                                        <HStack flexWrap={'wrap'}>
+                                            <Box width='25%' >
+                                                <DefText text='일정' />
+                                            </Box>
+                                            <Box width='75%' >
+                                                <HStack alignItems={'center'}>
+                                                    <Box width='8px' height='8px' backgroundColor={colorSelect.blue} mr='10px' />
+                                                    <DefText text={item.wr_1 + ' ' + item.wr_2} />
+                                                </HStack>
+                                            </Box>
+                                        </HStack>
+                                        <HStack flexWrap={'wrap'} mt='15px'>
+                                            <Box width='25%' >
+                                                <DefText text='내용' />
+                                            </Box>
+                                            <Box width='75%' >
+                                                <HStack alignItems={'center'}>
+                                                    <Box width='8px' height='8px' backgroundColor={colorSelect.blue} mr='10px' />
+                                                    <DefText text={item.wr_subject} />
+                                                </HStack>
+                                            </Box>
+                                        </HStack>
+                                        <HStack alignItems={'center'} flexWrap={'wrap'} mt='15px'>
+                                            <Box width='25%' >
+                                                <DefText text='주소' />
+                                            </Box>
+                                            <Box width='75%' >
+                                                <HStack alignItems={'center'}>
+                                                    <Box width='8px' height='8px' backgroundColor={colorSelect.blue} mr='10px' />
+                                                    <HStack flexWrap={'wrap'}>
+                                                        <DefText text={item.wr_addr1} />
+                                                        {
+                                                            item.wr_addr2 != '' &&
+                                                            <DefText text={item.wr_addr2 + item.wr_addr3} />
+                                                        }
+                                                    </HStack>
+                                                </HStack>
+                                            </Box>
+                                        </HStack>
+                                        {
+                                            item.wr_addr1 != '' ?
+                                            <Box height='170px' mt='15px' >
+                                                <WebView
+                                                    source={{
+                                                        uri:'https://cnj02.cafe24.com/scheduleMap.php?address='+item.wr_addr1
+                                                    }}
+                                                    style={{
+                                                        opacity:0.99,
+                                                        minHeight:1,
+                                                    }}
+                                                />
+                                                <TouchableOpacity 
+                                                    style={{position:'absolute', top:0, left:0, width:width - 40, height:170, backgroundColor:'transparent'}} 
+                                                    onPress={()=>navigation.navigate('MapView', {'url':item.wr_addr1})}
+                                                />
+                                            </Box>
+                                            :
+                                            <Box>
+                                            </Box>
+                                        }
+                                        
+                                    </Box>
+                                )
+                            })
+                            :
+                            <Box alignItems={'center'} py='40px'>
+                                <DefText text='등록된 스케줄이 없습니다.' />
                             </Box>
-                            <Box width='75%' >
-                                <HStack alignItems={'center'}>
-                                    <Box width='8px' height='8px' backgroundColor={colorSelect.blue} mr='10px' />
-                                    <DefText text='2020.01.05 오후 3시' />
-                                </HStack>
-                            </Box>
-                        </HStack>
-                        <HStack flexWrap={'wrap'} mt='15px'>
-                            <Box width='25%' >
-                                <DefText text='내용' />
-                            </Box>
-                            <Box width='75%' >
-                                <HStack alignItems={'center'}>
-                                    <Box width='8px' height='8px' backgroundColor={colorSelect.blue} mr='10px' />
-                                    <DefText text='홍길동 고객님과 보험 설계 미팅' />
-                                </HStack>
-                            </Box>
-                        </HStack>
-                        <HStack flexWrap={'wrap'} mt='15px'>
-                            <Box width='25%' >
-                                <DefText text='주소' />
-                            </Box>
-                            <Box width='75%' >
-                                <HStack alignItems={'center'}>
-                                    <Box width='8px' height='8px' backgroundColor={colorSelect.blue} mr='10px' />
-                                    <DefText text='서울특별시 구로구 구로동' />
-                                </HStack>
-                            </Box>
-                        </HStack>
-                        <Box height='170px' mt='15px' >
-                            <WebView
-                                source={{
-                                    uri:'https://cnj02.cafe24.com/scheduleMap.php?address=서울특별시 구로구 구로동&'
-                                }}
-                                style={{width:width}}
-                            />
-                            <TouchableOpacity 
-                                style={{position:'absolute', top:0, left:0, width:width - 40, height:170, backgroundColor:'transparent'}} 
-                                onPress={()=>navigation.navigate('MapView')}
-                            />
-                        </Box>
+                        }
+                        
                     </Box>
 
                 </ScrollView>
@@ -384,6 +614,52 @@ const ClientInfo = (props) => {
                     />
 
                 </Box>
+             </Modal>
+             <Modal isOpen={fpMemoAdd} onClose={()=>setFpMemoAdd(false)}>                
+                <Modal.Content>
+                    <Modal.Body>
+                        <DefText text='상담사 메모 입력' style={[styles.infoTitle, {color:colorSelect.black, marginBottom:15}]} />
+                        <DefInput
+                            placeholderText={'메모사항을 입력하세요.'}
+                            multiline={true}
+                            inputValue={fpMemo}
+                            onChangeText={fpMemoChange}
+                            inputStyle={{height:150}}
+                            textAlignVertical={'top'}
+                        />
+                        <SubmitButtons
+                            btnText={'메모입력'}
+                            buttonStyle={{width:width-86, height:40, borderRadius:5, marginTop:15}}
+                            btnTextStyle={{fontSize:fsize.fs14}}
+                            onPress={()=>fpMemoForm()}
+                        />
+                    </Modal.Body>
+
+                </Modal.Content>
+             </Modal>
+             <Modal isOpen={fpMemoDelStatus} onClose={()=>setFpMemoDelStatus(false)}>                
+                <Modal.Content>
+                    <Modal.Body>
+                        <Box justifyContent={'center'} alignItems='center'>
+                            <DefText text={'등록된 메모를 정말 삭제하시겠습니까?\n메모는 복구가 불가능합니다.'} style={[styles.infoTitle, {color:colorSelect.black, marginBottom:15, textAlign:'center'}]} />
+                        </Box>
+                        <HStack justifyContent={'space-between'}>
+                            <SubmitButtons
+                                btnText={'예'}
+                                buttonStyle={{width:(width-86) * 0.47, height:40, borderRadius:5, marginTop:15}}
+                                btnTextStyle={{fontSize:fsize.fs14}}
+                                onPress={()=>fpMemoDel()}
+                            />
+                            <SubmitButtons
+                                btnText={'아니오'}
+                                buttonStyle={{width:(width-86) * 0.47, height:40, borderRadius:5, marginTop:15, backgroundColor:colorSelect.gray}}
+                                btnTextStyle={{fontSize:fsize.fs14}}
+                                onPress={()=>setFpMemoDelStatus(false)}
+                            />
+                        </HStack>
+                    </Modal.Body>
+
+                </Modal.Content>
              </Modal>
              {
                  !statusModal &&

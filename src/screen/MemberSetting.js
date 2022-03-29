@@ -6,19 +6,39 @@ import HeaderDef from '../components/HeaderDef';
 import {fsize, fweight, colorSelect, textStyle} from '../common/StyleDef';
 import { pointRequest } from '../Utils/DummyData';
 import { numberFormat, textLengthOverCut, phoneFormat } from '../common/dataFunction';
+import AsyncStorage from '@react-native-community/async-storage';
 
+import {connect} from 'react-redux';
+import { actionCreators as UserAction } from '../redux/module/action/UserAction';
+import { StackActions } from '@react-navigation/native';
+import Api from '../Api';
+import ToastMessage from '../components/ToastMessage';
+
+//운영과 테스터
 const MemberSetting = (props) => {
 
-    const {navigation} = props;
+    const {navigation, route, member_update, member_info,} = props;
+
+    const {params} = route;
+
+    console.log('params:::', params);
+
+    const [member, setMember] = useState('');
+
+    useEffect(()=>{
+        if(params != ''){
+            setMember(params);
+        }
+    },[params])
 
     //이름
-    const [name, setName] = useState('홍길동');
+    const [name, setName] = useState(params.mb_name);
     const nameChange = (text) => {
         setName(text)
     }
 
     //아이디
-    const [id, setId] = useState('MP00001');
+    const [id, setId] = useState(params.mb_id);
     const idChange = (id) => {
         setId(id);
     }
@@ -30,7 +50,7 @@ const MemberSetting = (props) => {
     }
 
     //소속
-    const [company, setCompany] = useState('영등포 직영지점');
+    const [company, setCompany] = useState(params.brands);
     const companyChange = (cmp) => {
         setCompany(cmp);
     }
@@ -42,15 +62,58 @@ const MemberSetting = (props) => {
     }
 
     //연락처
-    const [phoneNumber, setPhonenumber] = useState('');
+    const [phoneNumber, setPhonenumber] = useState(params.mb_hp);
     const phoneChange = (phone) => {
         setPhonenumber(phoneFormat(phone));
     }
 
     //이메일 
-    const [email, setEmail] = useState('');
+    const [email, setEmail] = useState(params.mb_email);
     const emailChange = (email) => {
         setEmail(email);
+    }
+
+
+    const memberUpdates =  async () => {
+        const formData = new FormData();
+        formData.append('method', 'member_update');
+        formData.append('id', id);
+        if(password){
+            formData.append('password', password);
+        }
+        formData.append('phone', phoneNumber);
+        formData.append('email', email);
+
+        const update = await member_update(formData);
+        if (update.result) {
+            // ToastMessage(update.msg);
+            console.log('회원정보 업데이트 성공..',update);
+
+            memberInfoRec();
+            navigation.navigate('Setting');
+            // navigation.dispatch(
+            //     StackActions.replace('Setting')
+            // );
+            ToastMessage(update.msg);
+
+         } else {
+            //console.log('회원정보 업데이트 실패..',update);
+            ToastMessage(update.msg);
+         }
+    }
+
+    const memberInfoRec = () => {
+        AsyncStorage.getItem('mb_id').then(async (response) => {
+
+            const formData = new FormData();
+            formData.append('method', 'member_info');
+            formData.append('id', response);
+            const member_info_list = await member_info(formData);
+
+            //console.log('회원정보를 조회', member_info_list);
+           // console.log(response)
+
+        });
     }
 
     return (
@@ -130,6 +193,7 @@ const MemberSetting = (props) => {
             </ScrollView>
             <SubmitButtons
                 btnText='저장'
+                onPress={memberUpdates}
             />
         </Box>
     );
@@ -143,4 +207,15 @@ const styles = StyleSheet.create({
     }
 })
 
-export default MemberSetting;
+
+export default connect(
+    ({ User }) => ({
+        userInfo: User.userInfo, //회원정보
+    }),
+    (dispatch) => ({
+        member_login: (user) => dispatch(UserAction.member_login(user)), //로그인
+        member_update: (user) => dispatch(UserAction.member_update(user)), //회원정보 변경
+        member_info: (user) => dispatch(UserAction.member_info(user)), //회원 정보 조회
+        
+    })
+)(MemberSetting);

@@ -10,6 +10,11 @@ import ToastMessage from '../components/ToastMessage';
 import {searchSettingCategory} from '../Utils/DummyData';
 import { useFocusEffect, useIsFocused } from '@react-navigation/native';
 
+import {connect} from 'react-redux';
+import { actionCreators as UserAction } from '../redux/module/action/UserAction';
+import { StackActions } from '@react-navigation/native';
+import Api from '../Api';
+
 Date.prototype.format = function(f) {
     if (!this.valueOf()) return " ";
  
@@ -46,15 +51,32 @@ let todayText = today.format('yyyy.MM.dd');
 
 const SearchSetting = (props) => {
 
-    const {navigation, route} = props;
+    const {navigation, route, userInfo} = props;
 
     const {params} = route;
 
    // console.log('route:::',route);
 
+   const [statusList, setStatusList] = useState([]);
+   const statusListReceive = () => {
+       Api.send('db_statusList', {}, (args)=>{
+           let resultItem = args.resultItem;
+           let arrItems = args.arrItems;
+   
+           if(resultItem.result === 'Y' && arrItems) {
+               console.log('진행상태리스트: ', arrItems, resultItem);
+               setStatusList(arrItems);
+           }else{
+               console.log('진행상태리스트 API 통신 오류!', resultItem);
+           }
+       });
+   }
+
     const isFocused = useIsFocused();
 
     useEffect(()=>{
+
+        statusListReceive();
 
         if(isFocused){
             if(params.startDate != ''){
@@ -185,7 +207,30 @@ const SearchSetting = (props) => {
                     <Box mt='60px'>
                         <DefText text='진행 상태' style={[textStyle.labelTitle, fweight.eb]}/>
                         <HStack flexWrap={'wrap'} mt='15px'>
-                            {category}
+                            {
+                                statusList != '' &&
+                                statusList.length > 0 ?
+                                statusList.map((item, index)=>{
+                                    return(
+                                        <TouchableOpacity 
+                                            key={index} 
+                                            style={[
+                                                styles.categoryBtn,
+                                                (index + 1) % 3 === 0 && {marginRight:0},
+                                                categoryData.includes(item.wr_subject) && {backgroundColor:'#4473B8'}
+                                            ]}
+                                            onPress={()=>categoryHandler(item.wr_subject)}
+                                        >
+                                            <DefText text={item.wr_subject} style={[categoryData.includes(item.wr_subject) && {color:colorSelect.white}]} />
+                                        </TouchableOpacity>
+                                    )
+                                })
+                                :
+                                <Box alignItems={'center'} py='40px'>
+                                    <DefText text='등록된 진행상태가 없습니다.' />
+                                </Box>
+                            }
+                         
                         </HStack>
                     </Box>
                 </Box>
@@ -239,4 +284,13 @@ const styles = StyleSheet.create({
 
 })
 
-export default SearchSetting;
+export default connect(
+    ({ User }) => ({
+        userInfo: User.userInfo, //회원정보
+    }),
+    (dispatch) => ({
+        member_login: (user) => dispatch(UserAction.member_login(user)), //로그인
+        member_info: (user) => dispatch(UserAction.member_info(user)), //회원 정보 조회
+        
+    })
+)(SearchSetting);

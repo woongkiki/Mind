@@ -17,8 +17,8 @@ const Login = (props) => {
     const {params} = route;
     
     useEffect( ()=> {
-        if(params.id != ''){
-            setId(params.id);
+        if(params?.id != ''){
+            setId(params?.id);
             setChecked(true);
         }
     }, [])
@@ -30,7 +30,8 @@ const Login = (props) => {
     }
 
     //비밀번호
-    const [password, setPassword] = useState('r123456!');
+    const [password, setPassword] = useState('');
+    //const [password, setPassword] = useState('r123456@');
     const pwdHandler = (pwd) => {
         setPassword(pwd);
     }
@@ -61,10 +62,11 @@ const Login = (props) => {
         if(login.state){ //로그인 완료되면..
 
             //console.log('로그인 완료', login);
-            if(login.result.mb_10 == '0'){
-                navigation.reset({
-                    routes: [{ name: 'FirstLogin' }],
-                });
+            if(login.result.mb_10 == 0){
+                // navigation.reset({
+                //     routes: [{ name: 'FirstLogin' }],
+                // });
+                navigation.navigate('FirstLogin')
             }else{
                 ToastMessage(login.msg);
                 navigation.reset({
@@ -126,15 +128,15 @@ const Login = (props) => {
                                            <Image source={require('../images/checkIcons.png')} alt='체크아이콘' style={{width:9, height:6, resizeMode:'contain'}} />
                                         }
                                     </Box>
-                                    <DefText text='사번저장' />
+                                    <DefText text='사번저장' style={[Platform.OS === 'ios' && {marginTop:2}]} />
                                 </HStack>
                             </TouchableOpacity>
                             <HStack alignItems={'center'}>
-                                <TouchableOpacity style={{borderBottomWidth:1, borderBottomColor:'#000'}}>
+                                <TouchableOpacity onPress={()=>navigation.navigate('IdLost')} style={{borderBottomWidth:1, borderBottomColor:'#000'}}>
                                     <DefText text='아이디 찾기' />
                                 </TouchableOpacity>
                                 <Box style={{width:1, height:'90%', backgroundColor:'#000', marginHorizontal:10}} />
-                                <TouchableOpacity style={{borderBottomWidth:1, borderBottomColor:'#000'}}>
+                                <TouchableOpacity onPress={()=>navigation.navigate('PasswordLost')} style={{borderBottomWidth:1, borderBottomColor:'#000'}}>
                                     <DefText text='비밀번호 찾기' />
                                 </TouchableOpacity>
                             </HStack>

@@ -17,13 +17,15 @@ const MapView = ( props ) => {
 
     const {params} = route;
 
+    console.log('params::::',params);
+
     return (
         <Box flex={1} backgroundColor='#fff'>
             <HeaderDef headerTitle='스케줄 정보' navigation={navigation} />
             <Box height={ height - 55 }>
                 <WebView
                     source={{
-                        uri:'https://cnj02.cafe24.com/scheduleMap.php?address=서울특별시 구로구 구로동&clientlName=홍길동'
+                        uri:'https://cnj02.cafe24.com/scheduleMap.php?address='+params.url
                     }}
                     style={{width:width}}
                 />

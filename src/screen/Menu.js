@@ -85,7 +85,7 @@ const Menu = (props) => {
                         </Box>
                     </Box>
                     <Box>
-                        <TouchableOpacity style={[styles.menuBtn1]} >
+                        <TouchableOpacity style={[styles.menuBtn1]} onPress={()=>navigation.navigate('Statistics')}>
                             <DefText text='통계 및 분석' style={[styles.menuBtn1Text]} />
                         </TouchableOpacity>
                     </Box>

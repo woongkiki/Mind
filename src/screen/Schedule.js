@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from 'react';
-import { ScrollView, Platform, Dimensions, StyleSheet, Alert, View, TouchableOpacity } from 'react-native';
+import { ScrollView, Platform, Dimensions, StyleSheet, Alert, View, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Box, VStack, HStack, Image, Input } from 'native-base';
 import { DefText } from '../common/BOOTSTRAP';
 import Font from '../common/Font';
@@ -8,6 +8,14 @@ import {fsize, fweight, colorSelect, textStyle} from '../common/StyleDef';
 import { officeBoard, brandBoard, memoBoard } from '../Utils/DummyData';
 import { textLengthOverCut } from '../common/dataFunction';
 import {Calendar, CalendarList, Agenda, LocaleConfig} from 'react-native-calendars';
+import { useFocusEffect, useIsFocused } from '@react-navigation/native';
+
+import {connect} from 'react-redux';
+import { actionCreators as UserAction } from '../redux/module/action/UserAction';
+import { StackActions } from '@react-navigation/native';
+import Api from '../Api';
+import _ from 'lodash';
+import XDate from 'xdate';
 
 const {width} = Dimensions.get('window');
 
@@ -40,6 +48,7 @@ Number.prototype.zf = function(len){return this.toString().zf(len);};
 
 let today = new Date();
 let todayText = today.format('yyyy-MM-dd');
+let times = today.format('HH:mm');
 let oneYearLater = new Date(today.setFullYear(today.getFullYear() + 1));
 let oneAfter = oneYearLater.format('yyyy-MM-dd');
 
@@ -61,7 +70,7 @@ function dateDiff(_date1, _date2) {
 
 const Schedule = (props) => {
 
-    const {navigation} = props;
+    const {navigation, userInfo} = props;
 
     LocaleConfig.locales['ko'] = {
         monthNames: ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'],
@@ -79,73 +88,176 @@ const Schedule = (props) => {
         navigation.navigate('ScheduleAdd', {'startDate' : dates});
     }
 
+   //주말 휴일 설정
+    const getDisabledWeeks = (startDate, endDate, daysToDisable) => {
+        const disabledDates = {};
+        const start = new XDate(startDate).addDays(1);
+        const end = new XDate(endDate).addDays(1);
+
+        for (let m = new XDate(start); 0<=m.diffDays(end); m.addDays(1)) {
+            if (_.includes(daysToDisable, m.getDay())) {
+                disabledDates[m.toString('yyyy-MM-dd')] = {
+                    customStyles: {
+                        text: {
+                            color: '#f00'
+                        }
+                    }
+                    
+                };
+            }
+        }
+       
+        return disabledDates;
+    };
+
+    const [scheduleLoading, setScheduleLoading] = useState(true);
+    const [scheduleData, setScheduleData] = useState([]);
+    const [scheduleAllData, setScheduleAllData] = useState([]);
+    const ScheduleReceive = async () => {
+        await setScheduleLoading(true);
+
+        await Api.send('schedule_list', {'idx':userInfo.mb_no, 'time':times, 'today':todayText}, (args)=>{
+            let resultItem = args.resultItem;
+            let arrItems = args.arrItems;
+    
+            if(resultItem.result === 'Y' && arrItems) {
+               console.log('스케줄 리스트 결과: ', resultItem);
+
+               setScheduleData(arrItems);
+
+            }else{
+                console.log('스케줄 리스트 결과 출력 실패!', resultItem);
+
+            }
+        });
+
+        await Api.send('schedule_allList', {}, (args)=>{
+            let resultItem = args.resultItem;
+            let arrItems = args.arrItems;
+    
+            if(resultItem.result === 'Y' && arrItems) {
+               console.log('스케줄 전체 리스트 결과: ', arrItems);
+               setScheduleAllData(arrItems);
+            }else{
+                console.log('스케줄 리스트 결과 출력 실패!', resultItem);
+
+            }
+        });
+
+        await setScheduleLoading(false);
+    }
+
     useEffect(()=>{
-        console.log('12312312', dateDiff(today, oneYearLater));
-    }, [])
+        ScheduleReceive();
+    }, []);
+
+
+    const isFocused = useIsFocused();
+    
+    useEffect(()=>{
+
+        if(isFocused){
+
+            ScheduleReceive();
+        }
+
+    }, [isFocused]);
 
     return (
         <Box flex={1} backgroundColor='#fff'>
             <HeaderHome headerTitle='스케줄' />
-            <ScrollView>
-                <Box px='20px' pb='20px'>
-                    <Box backgroundColor={'#fff'} borderRadius={6} shadow={9} mt='20px'>
-                        <Calendar
-                            style={{borderRadius:15}}
-                            current={todayText}
-                            minDate={todayText}
-                            maxDate={oneAfter}
-                            onDayPress={ day => scheduleAdd(day.dateString)}
-                            markedDates={{
-                                [date] : {selected: true, marked:false, selectedColor: '#4473B8'},
-                                //'2022-03-17': {marked: true},
-                                //'2022-03-18': {marked: true, dotColor: 'red', activeOpacity: 0},
-                                //'2022-03-19': {disabled: true, disableTouchEvent: true}
-                            }}
-                            monthFormat={'yyyy년 MMMM'}
-                            theme = {{
-                                selectedDayBackgroundColor : '#4473B8' , 
-                                selectedDayTextColor : '#fff',
-                                arrowColor: '#000',
-                                dayTextColor: '#000',
-                                textSectionTitleColor:'#191919',
-                                textSectionTitleDisabledColor:'#000',
-                                todayTextColor: '#000',
-                                textDayFontFamily : Font.NanumSquareRoundR,
-                                textMonthFontFamily: Font.NanumSquareRoundR,
-                                textDayHeaderFontFamily : Font.NanumSquareRoundR , 
-                                textDayFontWeight : '400',
-                                textMonthFontWeight: 'bold',
-                                textDayHeaderFontWeight : 'bold' , 
-                                textDayFontSize : 14 , 
-                                textMonthFontSize : 14 , 
-                                textDayHeaderFontSize : 14,
-                                'stylesheet.calendar.header': {
-                                    dayTextAtIndex0: {
-                                      color: 'red'
-                                    },
-                                    dayTextAtIndex6: {
-                                      color: 'blue'
-                                    }
-                                  }
-
-                            }}
-                        />
-                    </Box>
-                    <Box mt='25px'>
-                        <DefText text='오늘의 할 일' style={styles.labelTitle} />
-                        <TouchableOpacity>
-                            <Box p='15px' shadow={9} backgroundColor='#fff' borderRadius={10}>
-                                <DefText text='2022.02.08 오전 11시' />
-                                <DefText text='홍길동님과 미팅' style={{marginTop:10}} />
-                                <DefText text='서울특별시 구로구 구로동 스타벅스' style={{marginTop:10}} />
-                            </Box>
-                            <Box position={'absolute'} top='50%' right='20px' marginTop='-5px'>
-                                <Image source={require('../images/memberInfoArr.png')} alt='회원정보 화살표' style={{width:6, height:10, resizeMode:'contain'}} />
-                            </Box>
-                        </TouchableOpacity>
-                    </Box>
+            {
+                scheduleLoading ?
+                <Box flex={1} backgroundColor='#fff' justifyContent={'center'} alignItems='center'>
+                    <ActivityIndicator size={'large'} color='#333' />
                 </Box>
-            </ScrollView>
+                :
+                <ScrollView>
+                    <Box px='20px' pb='20px'>
+                        <Box backgroundColor={'#fff'} borderRadius={6} shadow={9} mt='20px'>
+                            <Calendar
+                                style={{borderRadius:15}}
+                                current={todayText}
+                                minDate={todayText}
+                                maxDate={oneAfter}
+                                onDayPress={ day => scheduleAdd(day.dateString)}
+                                markingType={'custom'}
+                                markedDates={{
+                                    [date] : {selected: true, selectedColor: '#4473B8'},
+                                    ...scheduleAllData,
+                                    ...getDisabledWeeks(todayText, oneYearLater, [0])
+                                    //'2022-03-17': {marked: true},
+                                    //'2022-03-18': {marked: true, dotColor: 'red', activeOpacity: 0},
+                                    //'2022-03-19': {disabled: true, disableTouchEvent: true}
+                                }}
+                                monthFormat={'yyyy년 MMMM'}
+                                theme = {{
+                                    selectedDayBackgroundColor : '#4473B8' , 
+                                    selectedDayTextColor : '#fff',
+                                    arrowColor: '#000',
+                                    dayTextColor: '#000',
+                                    textSectionTitleColor:'#191919',
+                                    textSectionTitleDisabledColor:'#000',
+                                    todayTextColor: '#000',
+                                    textDayFontFamily : Font.NanumSquareRoundR,
+                                    textMonthFontFamily: Font.NanumSquareRoundR,
+                                    textDayHeaderFontFamily : Font.NanumSquareRoundR , 
+                                    textDayFontWeight : '400',
+                                    textMonthFontWeight: 'bold',
+                                    textDayHeaderFontWeight : 'bold' , 
+                                    textDayFontSize : 14 , 
+                                    textMonthFontSize : 14 , 
+                                    textDayHeaderFontSize : 14,
+                                    'stylesheet.calendar.header': {
+                                        week: {
+                                        marginTop: 30,
+                                        marginHorizontal: 12,
+                                        flexDirection: 'row',
+                                        justifyContent: 'space-between'
+                                        }
+                                    }
+                                }}
+                            />
+                        </Box>
+                        <Box mt='25px'>
+                            <DefText text='오늘의 할 일' style={styles.labelTitle} />
+                            {
+                                scheduleData != '' &&
+                                scheduleData.length > 0 ?
+                                scheduleData.map((item, index) => {
+                                    return(
+                                        <TouchableOpacity onPress={()=>navigation.navigate('ScheduleInfo', {'idx':item.wr_id})} key={index} style={ scheduleData.length != index + 1 ? {marginBottom:15} : {marginBottom:0} }>
+                                            <Box p='15px' shadow={9} backgroundColor='#fff' borderRadius={10}>
+                                                <Box width='90%' >
+                                                    <DefText text={item.wr_1 + ' ' + item.wr_2} />
+                                                    <DefText text={item.wr_subject} style={{marginTop:10}} />
+                                                    <HStack>
+                                                        <DefText text={item.wr_addr1} style={{marginTop:10}} />
+                                                        {
+                                                            item.wr_addr2 != '' &&
+                                                            <DefText text={' ' + item.wr_addr2} style={{marginTop:10}} />
+                                                        }
+                                                    </HStack>
+                                                </Box>
+                                            </Box>
+                                            <Box position={'absolute'} top='50%' right='20px' marginTop='-5px'>
+                                                <Image source={require('../images/memberInfoArr.png')} alt='회원정보 화살표' style={{width:6, height:10, resizeMode:'contain'}} />
+                                            </Box>
+                                        </TouchableOpacity>
+                                    )
+                                })
+                                
+                                :
+                                <Box alignItems={'center'} py='40px'>
+                                    <DefText text='등록된 스케줄이 없습니다.' />
+                                </Box>
+                            }
+                        
+                        </Box>
+                    </Box>
+                </ScrollView>
+            }
+            
         </Box>
     );
 };
@@ -158,4 +270,13 @@ const styles = StyleSheet.create({
     }
 })
 
-export default Schedule;
+export default connect(
+    ({ User }) => ({
+        userInfo: User.userInfo, //회원정보
+    }),
+    (dispatch) => ({
+        member_login: (user) => dispatch(UserAction.member_login(user)), //로그인
+        member_info: (user) => dispatch(UserAction.member_info(user)), //회원 정보 조회
+        
+    })
+)(Schedule);

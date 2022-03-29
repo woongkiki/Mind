@@ -92,7 +92,7 @@ const AllClient = (props) => {
             let arrItems = args.arrItems;
     
             if(resultItem.result === 'Y' && arrItems) {
-                //console.log('전체 고객 리스트 결과: ', arrItems, resultItem);
+                console.log('전체 고객 리스트 결과: ', arrItems, resultItem);
                 setAllClient(arrItems);
 
             }else{
