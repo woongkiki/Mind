@@ -25,7 +25,7 @@ const MapView = ( props ) => {
             <Box height={ height - 55 }>
                 <WebView
                     source={{
-                        uri:'https://cnj02.cafe24.com/scheduleMap.php?address='+params.url
+                        uri:'https://maumapp.cafe24.com/scheduleMap.php?address='+params.url
                     }}
                     style={{width:width}}
                 />

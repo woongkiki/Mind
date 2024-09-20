@@ -41,35 +41,45 @@ const progressTag = [
 
 const ProgressClient = (props) => {
 
-    const {navigation, userInfo} = props;
+    const {navigation, userInfo, route} = props;
 
-    const [selectTag, setSelectTag] = useState('미팅');
+    const {params} = route;
 
+    const [selectTag, setSelectTag] = useState(params.cate);
 
     const selectTagHandler = (tag) => {
         setSelectTag(tag);
     }
 
+    useEffect(()=>{
+        if(params != ''){
+            setSelectTag(params.cate);
+        }
+    }, [params])
+
     const [progressData, setProgressData] = useState([]);
-    const [meetingCnt, setMeetingCnt] = useState(0);
-    const [callCnt, setCallCnt] = useState(0);
-    const [contractCnt, setContractCnt] = useState(0);
-    const [counselCnt, setCounselCnt] = useState(0);
+    const [consultCnt, setConsultCnt] = useState("0"); //상담대기
+    const [callCnt, setCallCnt] = useState("0"); //통화
+    const [meetCnt, setMeetCnt] = useState("0"); //미팅
+    const [subscripCnt, setSubscripCnt] = useState("0"); //청약진행
+    const [ASCnt, setAScnt] = useState("0"); // AS요청
 
     const [progressLoading, setProgressLoading] = useState(true);
     const progressRec = async () => {
         await setProgressLoading(true);
-        await Api.send('db_progressList', {'idx':userInfo.mb_no, 'cate':selectTag}, (args)=>{
+        await Api.send('dbApi_progressList', {'idx':userInfo.mb_no, 'cate':selectTag, 'startdate':params.startdate, 'enddate':params.enddate}, (args)=>{
             let resultItem = args.resultItem;
             let arrItems = args.arrItems;
     
             if(resultItem.result === 'Y' && arrItems) {
-                console.log('진행중인 고객 결과: ', arrItems);
+                console.log('진행중인 고객 결과1: ', resultItem);
                 setProgressData(arrItems.progress);
-                setMeetingCnt(arrItems.meetCnt);
+                setConsultCnt(arrItems.consultingCnt);
                 setCallCnt(arrItems.callCnt);
-                setContractCnt(arrItems.contractCnt);
-                setCounselCnt(arrItems.caunselCnt)
+                setMeetCnt(arrItems.meetCnt);
+                setSubscripCnt(arrItems.subscription);
+                setAScnt(arrItems.ASCnt);
+                
             }else{
                 console.log('진행중인 고객 출력 실패!', resultItem);
 
@@ -96,12 +106,12 @@ const ProgressClient = (props) => {
                         <HStack backgroundColor={'#F0F0F0'} borderRadius={10}>
                             <TouchableOpacity 
                                 
-                                style={[styles.tagButton, selectTag === '미팅' && { backgroundColor: colorSelect.blue }]}
-                                onPress={()=>selectTagHandler('미팅')}
+                                style={[styles.tagButton, selectTag === '상담대기' && { backgroundColor: colorSelect.blue }]}
+                                onPress={()=>selectTagHandler('상담대기')}
                             >
                                 <HStack alignItems={'center'}>
-                                    <DefText text='미팅'  style={selectTag === '미팅' ? [{color: colorSelect.white}, fweight.eb] : [{color:'#333'}]} />
-                                    <DefText text={meetingCnt ? ' (' + meetingCnt + ')' : '(0)'} style={selectTag === '미팅' ? [{color: colorSelect.white}, fweight.eb] : [{color:'#333'}]} />
+                                    <DefText text='상담대기' style={[ {fontSize:fsize.fs12}, selectTag === '상담대기' && {color: colorSelect.white}, fweight.eb]}  />
+                                    <DefText text={consultCnt ? ' (' + consultCnt + ')' : '(0)'} style={[ {fontSize:fsize.fs12},selectTag === '상담대기' && {color: colorSelect.white}, fweight.eb]} />
                                 </HStack>
                             </TouchableOpacity>
                             <TouchableOpacity 
@@ -110,30 +120,43 @@ const ProgressClient = (props) => {
                                 onPress={()=>selectTagHandler('통화')}
                             >
                                 <HStack alignItems={'center'}>
-                                    <DefText text='통화'  style={selectTag === '통화' ? [{color: colorSelect.white}, fweight.eb] : [{color:'#333'}]} />
-                                    <DefText text={callCnt ? ' (' + callCnt + ')' : '(0)'} style={selectTag === '통화' ? [{color: colorSelect.white}, fweight.eb] : [{color:'#333'}]} />
+                                    <DefText text='통화'  style={[ {fontSize:fsize.fs12}, selectTag === '통화' && {color: colorSelect.white}, fweight.eb]} />
+                                    <DefText text={callCnt ? ' (' + callCnt + ')' : '(0)'} style={[ {fontSize:fsize.fs12},selectTag === '통화' && {color: colorSelect.white}, fweight.eb]} />
                                 </HStack>
                             </TouchableOpacity>
                             <TouchableOpacity 
                                 
-                                style={[styles.tagButton, selectTag === '계약' && { backgroundColor: colorSelect.blue }]}
-                                onPress={()=>selectTagHandler('계약')}
+                                style={[styles.tagButton, selectTag === '미팅' && { backgroundColor: colorSelect.blue }]}
+                                onPress={()=>selectTagHandler('미팅')}
                             >
                                 <HStack alignItems={'center'}>
-                                    <DefText text='계약' style={selectTag === '계약' && [{color: colorSelect.white}, fweight.eb]}  />
-                                    <DefText text={contractCnt ? ' (' + contractCnt + ')' : '(0)'} style={selectTag === '계약' && [{color: colorSelect.white}, fweight.eb]} />
+                                    <DefText text='미팅'  style={[ {fontSize:fsize.fs12}, selectTag === '미팅' && {color: colorSelect.white}, fweight.eb]}  />
+                                    <DefText text={meetCnt ? ' (' + meetCnt + ')' : '(0)'} style={[ {fontSize:fsize.fs12},selectTag === '미팅' && {color: colorSelect.white}, fweight.eb]} />
                                 </HStack>
                             </TouchableOpacity>
+                            
                             <TouchableOpacity 
                                 
-                                style={[styles.tagButton, selectTag === '상담' && { backgroundColor: colorSelect.blue }]}
-                                onPress={()=>selectTagHandler('상담')}
+                                style={[styles.tagButton, selectTag === '청약진행' && { backgroundColor: colorSelect.blue }]}
+                                onPress={()=>selectTagHandler('청약진행')}
                             >
                                 <HStack alignItems={'center'}>
-                                    <DefText text='상담' style={selectTag === '상담' && [{color: colorSelect.white}, fweight.eb]} />
-                                    <DefText text={counselCnt ? ' (' + counselCnt + ')' : '(0)'} style={selectTag === '상담' && [{color: colorSelect.white}, fweight.eb]} />
+                                    <DefText text='청약진행' style={[ {fontSize:fsize.fs12}, selectTag === '청약진행' && {color: colorSelect.white}, fweight.eb]}  />
+                                    <DefText text={subscripCnt ? ' (' + subscripCnt + ')' : '(0)'} style={[ {fontSize:fsize.fs12},selectTag === '청약진행' && {color: colorSelect.white}, fweight.eb]} />
                                 </HStack>
                             </TouchableOpacity>
+                            
+                            <TouchableOpacity 
+                                
+                                style={[styles.tagButton, selectTag === 'AS요청' && { backgroundColor: colorSelect.blue }]}
+                                onPress={()=>selectTagHandler('AS요청')}
+                            >
+                                <HStack alignItems={'center'}>
+                                    <DefText text='AS요청' style={[ {fontSize:fsize.fs12}, selectTag === 'AS요청' && {color: colorSelect.white}, fweight.eb]}  />
+                                    <DefText text={ASCnt ? ' (' + ASCnt + ')' : '(0)'} style={[ {fontSize:fsize.fs12},selectTag === 'AS요청' && {color: colorSelect.white}, fweight.eb]} />
+                                </HStack>
+                            </TouchableOpacity>
+                            
                             {/* {
                                 progressTag.map((item, index)=> {
                                     return(
@@ -163,20 +186,24 @@ const ProgressClient = (props) => {
                                                     <DefText text={item.wr_subject} />
                                                 </Box>
                                             </HStack>
-                                            <HStack alignItems={'center'} mb='10px'>
-                                                <Box width='20%' >
-                                                    <DefText text={'주소'} style={[fweight.b]}  />
-                                                </Box>
-                                                <Box width='62%' >
-                                                    <DefText text={item?.s_addrs ? item.s_addrs : '-'} />
-                                                </Box>
-                                            </HStack>
+                                            {
+                                                item.s_addrs != '' &&
+                                                <HStack alignItems={'center'} mb='10px'>
+                                                    <Box width='20%' >
+                                                        <DefText text={'주소'} style={[fweight.b]}  />
+                                                    </Box>
+                                                    <Box width='62%' >
+                                                        <DefText text={item?.s_addrs ? item.s_addrs : '-'} />
+                                                    </Box>
+                                                </HStack>
+                                            }
+                                            
                                             <HStack alignItems={'center'} >
                                                 <Box width='20%' >
                                                     <DefText text={'일시'} style={[fweight.b]}  />
                                                 </Box>
                                                 <Box width='62%' >
-                                                    <DefText text={item?.s_dates ? item.s_dates : '-'} />
+                                                    <DefText text={item?.wr_1 ? item.wr_1 : '-'} />
                                                 </Box>
                                             </HStack>
                                             <Box position={'absolute'} top='65%' right='20px'>
@@ -202,7 +229,7 @@ const ProgressClient = (props) => {
 
 const styles = StyleSheet.create({
     tagButton: {
-        width: (width - 40) * 0.25,
+        width: (width - 40) * 0.2,
         height:40,
         backgroundColor:'#F0F0F0',
         alignItems:'center',

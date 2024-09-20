@@ -511,33 +511,61 @@ export const pointRequest = [
 
 //사용 데이터
 export const menus = [
+    // {
+    //     screen : 'OfficeBoard',
+    //     name : '본사게시판',
+    // },
+    // {
+    //     screen : 'BrandBoard',
+    //     name : '지사게시판',
+    // },
     {
-        screen : 'OfficeBoard',
-        name : '본사게시판',
+        screen : 'OfficeBusinessForm',
+        name : '본사담당자',
     },
     {
-        screen : 'BrandBoard',
-        name : '지사게시판',
+        screen : 'SalesList',
+        name : 'Hot-Line',
     },
     {
-        screen : 'MemoBoard',
-        name : '쪽지함',
+        screen : 'EducationList',
+        name : '교육신청',
     },
     {
         screen : 'EducationVideo',
-        name : '동영상교육',
+        name : '교육영상',
     },
     {
-        screen : 'EducationData',
+        screen : 'EducationDataNew',
         name : '교육자료',
     },
     {
-        screen : 'MyEducation',
-        name : 'MY교육',
+        screen : 'WMService',
+        name : 'WM신청',
     },
+    {
+        screen : 'WMBest',
+        name : 'WM우수사례',
+    },
+    {
+        screen : 'WMCunsult',
+        name : 'WM컨설팅자료',
+    },
+    {
+        screen : 'WMVideo',
+        name : 'WM교육영상',
+    },
+    // {
+    //     screen : 'MyEducation',
+    //     name : 'MY교육',
+    // },
     {
         screen : 'Statistics',
         name : '통계 및 분석',
+    },
+    {
+        screen:'DBRequestList',
+        name : '가망고객 신청'
     },
     {
         screen : 'Calculate',

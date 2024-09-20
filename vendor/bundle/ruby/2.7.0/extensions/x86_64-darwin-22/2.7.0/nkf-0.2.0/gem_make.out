@@ -1,0 +1,16 @@
+current directory: /Users/kwk/Desktop/react-native/MindAppUp/vendor/bundle/ruby/2.7.0/gems/nkf-0.2.0/ext/nkf
+/Users/kwk/.rbenv/versions/2.7.6/bin/ruby -I /Users/kwk/.rbenv/versions/2.7.6/lib/ruby/2.7.0 -r ./siteconf20240827-27381-1grkerz.rb extconf.rb
+creating Makefile
+
+current directory: /Users/kwk/Desktop/react-native/MindAppUp/vendor/bundle/ruby/2.7.0/gems/nkf-0.2.0/ext/nkf
+make "DESTDIR=" clean
+
+current directory: /Users/kwk/Desktop/react-native/MindAppUp/vendor/bundle/ruby/2.7.0/gems/nkf-0.2.0/ext/nkf
+make "DESTDIR="
+compiling nkf.c
+linking shared-object nkf.bundle
+ld: warning: -multiply_defined is obsolete
+
+current directory: /Users/kwk/Desktop/react-native/MindAppUp/vendor/bundle/ruby/2.7.0/gems/nkf-0.2.0/ext/nkf
+make "DESTDIR=" install
+/usr/bin/install -c -m 0755 nkf.bundle ./.gem.20240827-27381-1y6bc4q

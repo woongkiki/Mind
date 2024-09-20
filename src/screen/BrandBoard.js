@@ -1,7 +1,7 @@
 import React, {useState, useEffect} from 'react';
 import { ScrollView, Platform, Dimensions, StyleSheet, Alert, View, TouchableOpacity, FlatList, RefreshControl, ActivityIndicator } from 'react-native';
 import { Box, VStack, HStack, Image, Input, Select } from 'native-base';
-import { DefText, SearchInput } from '../common/BOOTSTRAP';
+import { DefText, SearchInput, SubmitButtons } from '../common/BOOTSTRAP';
 import HeaderDef from '../components/HeaderDef';
 import {fsize, fweight, colorSelect, textStyle} from '../common/StyleDef';
 import { officeBoard, brandBoard, memoBoard } from '../Utils/DummyData';
@@ -9,12 +9,14 @@ import { textLengthOverCut } from '../common/dataFunction';
 
 import {connect} from 'react-redux';
 import { actionCreators as UserAction } from '../redux/module/action/UserAction';
-import { StackActions } from '@react-navigation/native';
+import { StackAction, useIsFocused } from '@react-navigation/native';
 import Api from '../Api';
 
 const BrandBoard = (props) => {
 
     const {navigation, userInfo} = props;
+
+    const isFocused = useIsFocused();
 
     const [category, setCategory] = useState('');
 
@@ -40,12 +42,12 @@ const BrandBoard = (props) => {
     const brandReceive = async () => {
         await setBrandLoading(true);
 
-        await Api.send('com_brand', {'category':category, 'schText':searchText}, (args)=>{
+        await Api.send('com_brand', {'category':category, 'schText':searchText, 'brandIdx':userInfo.mb_1}, (args)=>{
             let resultItem = args.resultItem;
             let arrItems = args.arrItems;
     
             if(resultItem.result === 'Y' && arrItems) {
-                //console.log('커뮤니케이션 지사/지점 리스트: ', arrItems);
+                console.log('커뮤니케이션 지사/지점 리스트: ', resultItem);
                setBrandDatas(arrItems);
 
             }else{
@@ -59,7 +61,7 @@ const BrandBoard = (props) => {
             let arrItems = args.arrItems;
     
             if(resultItem.result === 'Y' && arrItems) {
-                console.log('커뮤니케이션 지사/지점 분류: ', arrItems);
+                //console.log('커뮤니케이션 지사/지점 분류: ', arrItems);
                 //지사장 
                 setBrandCategory(arrItems);
 
@@ -74,8 +76,10 @@ const BrandBoard = (props) => {
     }
 
     useEffect(()=>{
-        brandReceive();
-    }, [category])
+        if(isFocused){
+            brandReceive();
+        }
+    }, [category, isFocused])
 
     const _renderItem = ({item, index}) => {
         return(
@@ -156,6 +160,14 @@ const BrandBoard = (props) => {
                             <DefText text='등록된 게시글이 없습니다.' style={{color:colorSelect.black666}} />
                         </Box>                
                     }
+                />
+            }
+
+            {
+                userInfo?.rank2 == 1 &&
+                <SubmitButtons
+                    btnText='작성하기'
+                    onPress={()=>navigation.navigate('BrandForm')}
                 />
             }
         </Box>

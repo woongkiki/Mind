@@ -9,7 +9,7 @@ class Api {
         
         this.state = {
             isLoading   : false,
-            url         : 'https://cnj02.cafe24.com',
+            url         : 'https://maumapp.cafe24.com',
             path        : '/adm/api/',
             option  : {
                 method: 'POST',
@@ -251,6 +251,47 @@ class Api {
         }
     }
   }
+
+  multipartRequest = async (
+    body="",
+    stringify = true,
+    method = 'POST'
+  ) => {
+      try {
+          console.log('api body::', body['_parts']);
+          /*
+          for (let [key, value] of Object.entries(body)) {
+              console.log('key::',key, 'value::',value);
+          }
+          */
+          const response = await fetch(this.state.url + this.state.path, {
+              method,
+              headers: {
+                  'Accept': '*/*',
+                  'content-type': 'multipart/form-data',
+                  'Cache-Control': 'no-cache',
+                  'Accept-Encoding': 'gzip, deflate',
+                  'cache-control': 'no-cache',
+                  'Access-Control-Allow-Origin': '*', // Required for CORS support to work
+                  //'Access-Control-Allow-Credentials': true, // Required for cookies, authorization headers with HTTPS
+              },
+              credentials : 'include',
+              body: body,
+          });
+
+          //console.log("response::", response);
+          const responseJson = await response.json();
+          return responseJson;
+      } catch (error) {
+        console.log("Axios catch!!! >>", method, error)
+        /*
+        return {
+          code: 500,
+          message: error,
+        };
+        */
+      }
+  };
   //—————————————————————————————————————————————————
 }
 

@@ -83,7 +83,7 @@ const MemoBoard = (props) => {
 
     return (
         <Box flex={1} backgroundColor='#fff'>
-            <HeaderDef headerTitle='쪽지함' navigation={navigation} />
+            <HeaderDef headerTitle='본사 업무' navigation={navigation} />
             {
                 !memoLoading ?
                 <FlatList 
@@ -124,7 +124,7 @@ const MemoBoard = (props) => {
                     keyExtractor={(item, index)=>index.toString()}
                     ListEmptyComponent={
                         <Box py={10} alignItems='center'>
-                            <DefText text='받은 쪽지가 없습니다.' style={{color:colorSelect.black666}} />
+                            <DefText text='등록된 자료가 없습니다.' style={{color:colorSelect.black666}} />
                         </Box>                
                     }
                 />
@@ -135,7 +135,7 @@ const MemoBoard = (props) => {
             }
             
             <SubmitButtons
-                btnText='쪽지보내기'
+                btnText='작성하기'
                 onPress={()=>navigation.navigate('MemoForm')}
             />
         </Box>

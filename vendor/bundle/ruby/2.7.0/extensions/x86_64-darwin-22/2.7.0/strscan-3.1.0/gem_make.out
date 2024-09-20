@@ -1,0 +1,18 @@
+current directory: /Users/kwk/Desktop/react-native/MindAppUp/vendor/bundle/ruby/2.7.0/gems/strscan-3.1.0/ext/strscan
+/Users/kwk/.rbenv/versions/2.7.6/bin/ruby -I /Users/kwk/.rbenv/versions/2.7.6/lib/ruby/2.7.0 -r ./siteconf20240827-27381-oplcu9.rb extconf.rb
+checking for onig_region_memsize() in ruby.h... yes
+checking for rb_reg_onig_match() in ruby.h... no
+creating Makefile
+
+current directory: /Users/kwk/Desktop/react-native/MindAppUp/vendor/bundle/ruby/2.7.0/gems/strscan-3.1.0/ext/strscan
+make "DESTDIR=" clean
+
+current directory: /Users/kwk/Desktop/react-native/MindAppUp/vendor/bundle/ruby/2.7.0/gems/strscan-3.1.0/ext/strscan
+make "DESTDIR="
+compiling strscan.c
+linking shared-object strscan.bundle
+ld: warning: -multiply_defined is obsolete
+
+current directory: /Users/kwk/Desktop/react-native/MindAppUp/vendor/bundle/ruby/2.7.0/gems/strscan-3.1.0/ext/strscan
+make "DESTDIR=" install
+/usr/bin/install -c -m 0755 strscan.bundle ./.gem.20240827-27381-slze8m

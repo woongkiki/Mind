@@ -58,7 +58,7 @@ const MyEducation = (props) => {
         return(
             <Box  px='20px' key={index} mb='15px'>
                 <Box shadow={9} backgroundColor='#fff' borderRadius={10}>
-                    <TouchableOpacity onPress={()=>navigation.navigate('EducationVideoView', item)} disabled={ item.wr_10 == 'download' ? true : false}>
+                    <TouchableOpacity onPress={()=>navigation.navigate('EducationVideoView', {'idx':item.wr_id})} disabled={ item.wr_10 == 'download' ? true : false}>
                         <HStack alignItems={'center'} p='20px' justifyContent='space-between'>
                             <Box width='80%'>
                                 <DefText text={ textLengthOverCut('[' + item.categoryName + '] ' + item.boardName, 20)} style={[styles.videoTitle]} />

@@ -1,7 +1,7 @@
 import React, {useState, useEffect} from 'react';
 import { ScrollView, Platform, Dimensions, StyleSheet, Alert, View, TouchableOpacity, FlatList, RefreshControl, ActivityIndicator } from 'react-native';
 import { Box, VStack, HStack, Image, Input, Select } from 'native-base';
-import { DefText, SearchInput } from '../common/BOOTSTRAP';
+import { DefText, SearchInput, SubmitButtons } from '../common/BOOTSTRAP';
 import HeaderDef from '../components/HeaderDef';
 import {fsize, fweight, colorSelect, textStyle} from '../common/StyleDef';
 import { officeBoard, brandBoard, memoBoard } from '../Utils/DummyData';
@@ -9,13 +9,14 @@ import { textLengthOverCut } from '../common/dataFunction';
 
 import {connect} from 'react-redux';
 import { actionCreators as UserAction } from '../redux/module/action/UserAction';
-import { StackActions } from '@react-navigation/native';
+import { StackActions, useIsFocused } from '@react-navigation/native';
 import Api from '../Api';
-
 
 const OfficeBoard = (props) => {
 
     const {navigation, userInfo} = props;
+
+    const isFocused = useIsFocused();
 
     const [category, setCategory] = useState('');
 
@@ -45,7 +46,7 @@ const OfficeBoard = (props) => {
             let arrItems = args.arrItems;
     
             if(resultItem.result === 'Y' && arrItems) {
-                console.log('커뮤니케이션 본사게시판 리스트: ', resultItem);
+                //console.log('커뮤니케이션 본사게시판 리스트: ', resultItem);
                 setOfficeData(arrItems);
 
             }else{
@@ -73,8 +74,10 @@ const OfficeBoard = (props) => {
     }
 
     useEffect(()=>{
-        officeReceive();
-    }, [category])
+        if(isFocused){
+            officeReceive();
+        }
+    }, [category, isFocused])
 
     const _renderItem = ({item, index}) => {
         return(
@@ -85,7 +88,7 @@ const OfficeBoard = (props) => {
                     </Box>
                     <HStack width='80%' flexWrap='wrap'>
                         <DefText text={'[' + item.wr_1 + '] '} style={[{fontSize:15}, fweight.b]} />
-                        <DefText text={item.wr_subject} style={[{fontSize:15}, fweight.b]} />
+                        <DefText text={item.wr_subject} style={[{fontSize:15, lineHeight:18}, fweight.b]} />
                         {
                             item.wr_10 == 0 &&
                             <Box style={[styles.newBox]}>
@@ -156,6 +159,13 @@ const OfficeBoard = (props) => {
                             <DefText text='등록된 게시글이 없습니다.' style={{color:colorSelect.black666}} />
                         </Box>                
                     }
+                />
+            }
+            {
+                userInfo?.rank1 == 1 &&
+                <SubmitButtons
+                    btnText='작성하기'
+                    onPress={()=>navigation.navigate('OfficeForm')}
                 />
             }
         </Box>

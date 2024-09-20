@@ -49,11 +49,17 @@ export const actionCreators = {
           payload: response.data,
         });
 
-        //console.log('받아오기:::', response.data);
+        console.log('받아오기:::', response.data);
         if(response.data.idSave){
             AsyncStorage.setItem('save_id', response.data.mb_id);
         }else{
            AsyncStorage.removeItem('save_id');
+        }
+
+        if(response.data.auto == "Y"){
+            AsyncStorage.setItem('autoLogin', "Y");
+        }else{
+            AsyncStorage.setItem('autoLogin', "N");
         }
         //console.log('저장', response.data.auto_logins);
 
@@ -307,6 +313,7 @@ export const actionCreators = {
       // console.log('member_logout :::', response);
       AsyncStorage.removeItem('mb_id');
       AsyncStorage.removeItem('save_id');
+      AsyncStorage.removeItem('autoLogin');
 
       await dispatch({
         type: MEMBER_LOGOUT,
@@ -324,6 +331,7 @@ export const actionCreators = {
       // console.log('member_out :::', response);
       AsyncStorage.removeItem('mb_id');
       AsyncStorage.removeItem('save_id');
+      AsyncStorage.removeItem('autoLogin');
 
       await dispatch({
         type: MEMBER_LOGOUT,

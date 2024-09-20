@@ -55,7 +55,7 @@ const SearchSetting = (props) => {
 
     const {params} = route;
 
-   // console.log('route:::',route);
+   // console.log('route:::',route);손
 
    const [statusList, setStatusList] = useState([]);
    const statusListReceive = () => {
@@ -64,7 +64,7 @@ const SearchSetting = (props) => {
            let arrItems = args.arrItems;
    
            if(resultItem.result === 'Y' && arrItems) {
-               console.log('진행상태리스트: ', arrItems, resultItem);
+               console.log('진행상태리스트: ',  resultItem);
                setStatusList(arrItems);
            }else{
                console.log('진행상태리스트 API 통신 오류!', resultItem);
@@ -72,6 +72,8 @@ const SearchSetting = (props) => {
        });
    }
 
+
+    const [categorys, setCategorys] = useState('');
     const isFocused = useIsFocused();
 
     useEffect(()=>{
@@ -89,6 +91,10 @@ const SearchSetting = (props) => {
             }
             if(params.progressStatus != ''){
                 setCategoryData(params.progressStatus);
+            }
+
+            if(params.category != ''){
+                setCategorys(params.category)
             }
         }
 
@@ -239,7 +245,7 @@ const SearchSetting = (props) => {
 
                 <SubmitButtons 
                     btnText = '완료'
-                    onPress={()=>navigation.navigate('AllClient', {'startDate':startDate, 'endDate':endDate, 'progressStatus': categoryData})}
+                    onPress={()=>navigation.navigate('AllClient', {'startDate':startDate, 'endDate':endDate, 'progressStatus': categoryData, 'category': categorys})}
                 />
             </Box>
             <DateTimePickerModal

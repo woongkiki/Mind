@@ -42,7 +42,7 @@ const PossibleClient = (props) => {
             let arrItems = args.arrItems;
     
             if(resultItem.result === 'Y' && arrItems) {
-                console.log('전체 고객 리스트 결과: ', arrItems, resultItem);
+                console.log('전체 고객 리스트 결과: ', resultItem);
                 setAllClient(arrItems);
 
             }else{
@@ -78,8 +78,8 @@ const PossibleClient = (props) => {
                         allClients.length > 0 ?
                         allClients.map((item, index)=> {
                             return(
-                                <Box key={index} backgroundColor={'#fff'} borderRadius={10} shadow={9} mt={'15px'}>
-                                    <TouchableOpacity  style={{padding:15}} onPress={()=>navigation.navigate('ClientInfo', {'idx':item.wr_id})}>
+                                <Box key={index} backgroundColor={ item.wr_4 == 'AS 완료 승인' ? '#eee' : '#fff'} borderRadius={10} shadow={9} mt={'15px'}>
+                                    <TouchableOpacity disabled={ item.wr_4 == 'AS 완료 승인' ? true : false }   style={{padding:15}} onPress={()=>navigation.navigate('ClientInfo', {'idx':item.wr_id})}>
                                         <HStack>
                                             <DefText text={item.wr_subject + ' 고객님'} style={[{marginRight:10}, fweight.b]} />
                                             <DefText text={'(' + item.age + '세 / ' + item.bigo + ')'} />

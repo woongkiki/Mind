@@ -5,31 +5,95 @@ import { DefText } from '../common/BOOTSTRAP';
 import {connect} from 'react-redux';
 import { actionCreators as UserAction } from '../redux/module/action/UserAction';
 import AsyncStorage from '@react-native-community/async-storage';
+import messaging from '@react-native-firebase/messaging';
+import ToastMessage from '../components/ToastMessage';
 
 const Intro = (props) => {
 
     const {navigation, member_login, member_info} = props;
 
-    useEffect(()=>{
-        AsyncStorage.getItem('save_id').then(async (response) => {
+
+    const LoginHandler = async (id) => {
+       
+         const token = await messaging().getToken();
+
+         console.log("token", token);
+        // console.log("token::",token);
+
+        const formData = new FormData();
+        formData.append('id', id);
+        //formData.apeend('token', token);
+        formData.append('appToken', token);
+        formData.append('method', 'login_auto');
+
+        const login = await member_info(formData);
+
+        console.log("login", login);
+
+        if(login.state){ //로그인 완료되면..
             
-            console.log('response', response);
-            if(response == null){
-                setTimeout(() => {
-                    navigation.replace('Login', {'id':''});
-                }, 2000);
+            ToastMessage(login.msg);
+            navigation.reset({
+                routes: [{ name: 'Tab_Navigation', screen: 'Home' }],
+            });
+            //console.log('login::',login);
+
+        }else{ //로그인 실패..
+           console.log(login.msg);
+            ToastMessage(login.msg);
+            navigation.replace('Login', {'id':''});
+        }
+        
+    }
+
+    useEffect(()=>{
+        AsyncStorage.getItem('autoLogin').then(async (responseauto) => {
+            if(responseauto == "Y"){
+                AsyncStorage.getItem('mb_id').then(async (responsed) => {
+                    if(responsed == null){
+                        AsyncStorage.getItem('save_id').then(async (response) => {
+                    
+                            console.log('response', response);
+                            if(response == null){
+                                setTimeout(() => {
+                                    navigation.replace('Login', {'id':''});
+                                }, 2000);
+                            }else{
+                                console.log('response', response);
+                                setTimeout(() => {
+                                    navigation.replace('Login', {'id':response});
+                                }, 2000);
+                            }
+                        });
+                    }else{
+                        console.log("gogo", responsed);
+                        LoginHandler(responsed);
+                    }
+                })
             }else{
-                console.log('response', response);
-                setTimeout(() => {
-                    navigation.replace('Login', {'id':response});
-                }, 2000);
+                AsyncStorage.getItem('save_id').then(async (response) => {
+                    
+                    console.log('response', response);
+                    if(response == null){
+                        setTimeout(() => {
+                            navigation.replace('Login', {'id':''});
+                        }, 2000);
+                    }else{
+                        console.log('response', response);
+                        setTimeout(() => {
+                            navigation.replace('Login', {'id':response});
+                        }, 2000);
+                    }
+                });
             }
-        });
+        })
+       
+       
     }, [])
 
     return (
         <Box flex={1} backgroundColor='#fff' justifyContent={'center'} alignItems='center'>
-            <Image source={require('../images/introLofo.png')} alt='마음 로고' style={{width:144, height:180, resizeMode:'contain'}}  />
+            <Image source={require('../images/introLogoNew1103.png')} alt='마음 FC' style={{width:136, resizeMode:'contain'}} />
         </Box>
     );
 };

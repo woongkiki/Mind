@@ -34,8 +34,13 @@ const Comunication = (props) => {
     const [homeBrandCnt, setHomeBrandCnt] = useState(0);
 
     //쪽지함
+    //본사업무로 변경
     const [homeMemo, setHomeMemo] = useState([]);
     const [homeMemoCnt, setHomeMemoCnt] = useState(0);
+
+    //sales hot-line
+    const [sales, setSales] = useState([]);
+    const [salesCnt, setSalesCnt] = useState("0");
 
     const communicationRec = async () => {
 
@@ -57,12 +62,12 @@ const Comunication = (props) => {
         });
 
         //지사,지점게시판용
-        await Api.send('com_homeBrand', {}, (args)=>{
+        await Api.send('com_homeBrand', {'brandIdx':userInfo.mb_1}, (args)=>{
             let resultItem = args.resultItem;
             let arrItems = args.arrItems;
     
             if(resultItem.result === 'Y' && arrItems) {
-                //console.log('커뮤니케이션 지사/지점게시판 리스트: ', arrItems, resultItem);
+                //console.log('커뮤니케이션 지사/지점게시판 리스트: ', resultItem);
                 setHomeBrand(arrItems.brand);
                 setHomeBrandCnt(arrItems.cnt);
             }else{
@@ -72,12 +77,12 @@ const Comunication = (props) => {
         });
 
         //쪽지함
-        Api.send('com_homeMemo', {'recName':userInfo.mb_name}, (args)=>{
+        await Api.send('com_homeMemo', {'recName':userInfo.mb_name}, (args)=>{
             let resultItem = args.resultItem;
             let arrItems = args.arrItems;
     
             if(resultItem.result === 'Y' && arrItems) {
-                //console.log('커뮤니케이션 쪽지함 리스트: ', arrItems, resultItem);
+                console.log('커뮤니케이션 쪽지함 리스트: ', resultItem);
                 setHomeMemo(arrItems.memo);
                 setHomeMemoCnt(arrItems.cnt)
             }else{
@@ -86,7 +91,39 @@ const Comunication = (props) => {
             }
         });
 
+
+        //쪽지함
+        await Api.send('com_sales', {'recName':userInfo.mb_name}, (args)=>{
+            let resultItem = args.resultItem;
+            let arrItems = args.arrItems;
+    
+            if(resultItem.result === 'Y' && arrItems) {
+               console.log('커뮤니케이션 sales 리스트: ',  resultItem);
+                setSales(arrItems.sales);
+                setSalesCnt(arrItems.salesCnt)
+            }else{
+                console.log('커뮤니케이션 sales 실패!', resultItem);
+
+            }
+        });
+
         await setComLoading(false);
+    }
+
+    const appConnectConfirm = () => {
+        Api.send('app_connect', {'id':userInfo.mb_id, 'name':userInfo.mb_name}, (args)=>{
+            let resultItem = args.resultItem;
+            let arrItems = args.arrItems;
+    
+            if(resultItem.result === 'Y' && arrItems) {
+                console.log('앱 접속내역 성공: ', resultItem);
+
+                
+            }else{
+                console.log('앱 접속내역 실패', resultItem);
+
+            }
+        });
     }
 
     useEffect( ()=> {
@@ -100,11 +137,13 @@ const Comunication = (props) => {
 
         communicationRec();
 
+        appConnectConfirm();
+
     }, [isFocused]);
 
     return (
         <Box flex={1} backgroundColor='#fff'>
-            <HeaderHome headerTitle='커뮤니케이션' />
+            <HeaderHome headerTitle='hot line' />
             {
                 comLoading ?
                 <Box flex={1} backgroundColor='#fff' justifyContent={'center'} alignItems='center'>
@@ -114,52 +153,63 @@ const Comunication = (props) => {
                 <ScrollView>
                     <Box p='20px'>
                         <HStack alignItems={'center'} justifyContent='space-between'>
-                            <Box>
+                            {/* <Box>
                                 <HStack>
                                     <DefText text='새로운 알림' style={[{fontSize:fsize.fs22}, fweight.eb]} />
                                     <DefText text='을' style={[{fontSize:fsize.fs22}]} />
                                 </HStack>
                                 <DefText text='확인하세요!' style={[{fontSize:fsize.fs22, marginTop:5}]}  />
-                            </Box>
-                            <TouchableOpacity disabled={true} style={[styles.commuTopBox]}>
-                                <HStack alignItems={'center'} justifyContent='space-between' >
-                                    <HStack alignItems={'center'}>
-                                        <Image source={require('../images/memoIcons.png')} alt='쪽지' style={{width:29, height:26, resizeMode:'contain', marginRight:10}} />
-                                        <DefText text='쪽지함' style={[{fontSize:fsize.fs14, color:colorSelect.white}]} />
-                                    </HStack>
-                                    <DefText text={homeMemoCnt} style={[{color:colorSelect.white}, fweight.eb]} />
-                                </HStack>
-                            </TouchableOpacity>
-                        </HStack>
-                        <HStack justifyContent='space-between' alignItems={'center'} mt='15px'>
-                            <TouchableOpacity disabled={true} style={[styles.commuTopBox,  {backgroundColor:'#5893EA'}]}>
+                            </Box> */}
+                            {/* <TouchableOpacity onPress={()=>navigation.navigate('OfficeBoard')} style={[styles.commuTopBox,  {backgroundColor:colorSelect.blue}]}>
                                 <HStack alignItems={'center'} justifyContent='space-between'>
                                     <HStack alignItems={'center'}>
-                                        <Image source={require('../images/branchIcons.png')} alt='지사' style={{width:27, height:27, resizeMode:'contain', marginRight:10}} />
-                                        <DefText text='지사 게시판' style={[{fontSize:fsize.fs14, color:colorSelect.white}]} />
-                                    </HStack>
-                                    <DefText text={homeBrandCnt} style={[{color:colorSelect.white}, fweight.eb]} />
-                                </HStack>
-                            </TouchableOpacity>
-                            <TouchableOpacity disabled={true} style={[styles.commuTopBox,  {backgroundColor:colorSelect.blue}]}>
-                                <HStack alignItems={'center'} justifyContent='space-between'>
-                                    <HStack alignItems={'center'}>
-                                        <Image source={require('../images/officeIcons.png')} alt='본사' style={{width:27, height:27, resizeMode:'contain', marginRight:10}} />
+                                        <Image source={require('../images/officeIcons.png')} alt='본사' style={{width:23, height:22, resizeMode:'contain', marginRight:10}} />
                                         <DefText text='본사 게시판' style={[{fontSize:fsize.fs14, color:colorSelect.white}]} />
                                     </HStack>
                                     <DefText text={homeOfficeCnt} style={[{color:colorSelect.white}, fweight.eb]} />
                                 </HStack>
+                            </TouchableOpacity> */}
+                            <TouchableOpacity onPress={()=>navigation.navigate('SalesList')}  style={[styles.commuTopBox]}>
+                                <HStack alignItems={'center'} justifyContent='space-between' >
+                                    <HStack alignItems={'center'}>
+                                        <Image source={require('../images/saleIcons.png')} alt='쪽지' style={{width:23, height:21, resizeMode:'contain', marginRight:10}} />
+                                        <DefText text='hot line' style={[{fontSize:fsize.fs14, color:colorSelect.white}]} />
+                                    </HStack>
+                                    <DefText text={salesCnt} style={[{color:colorSelect.white}, fweight.eb]} />
+                                </HStack>
                             </TouchableOpacity>
+                            {/* <TouchableOpacity onPress={()=>navigation.navigate('OfficeBusiness')} style={[styles.commuTopBox]}>
+                                <HStack alignItems={'center'} justifyContent='space-between' >
+                                    <HStack alignItems={'center'}>
+                                        <Image source={require('../images/memoIcons.png')} alt='쪽지' style={{width:23, height:20, resizeMode:'contain', marginRight:10}} />
+                                        <DefText text='본사 업무' style={[{fontSize:fsize.fs14, color:colorSelect.white}]} />
+                                    </HStack>
+                                    <DefText text={homeMemoCnt} style={[{color:colorSelect.white}, fweight.eb]} />
+                                </HStack>
+                            </TouchableOpacity> */}
+                        </HStack>
+                        <HStack justifyContent='space-between' alignItems={'center'} mt='15px'>
+                            {/* <TouchableOpacity onPress={()=>navigation.navigate('BrandBoard')} style={[styles.commuTopBox,  {backgroundColor:'#5893EA'}]}>
+                                <HStack alignItems={'center'} justifyContent='space-between'>
+                                    <HStack alignItems={'center'}>
+                                        <Image source={require('../images/branchIcons.png')} alt='지사' style={{width:23, height:23, resizeMode:'contain', marginRight:10}} />
+                                        <DefText text='지사 게시판' style={[{fontSize:fsize.fs14, color:colorSelect.white}]} />
+                                    </HStack>
+                                    <DefText text={homeBrandCnt} style={[{color:colorSelect.white}, fweight.eb]} />
+                                </HStack>
+                            </TouchableOpacity> */}
+                            
                         </HStack>
 
-                        <Box mt='30px' backgroundColor={'#fff'} shadow={9} borderRadius={10}>
+                        {/* <Box mt='30px' backgroundColor={'#fff'} shadow={9} borderRadius={10}>
                             <Box style={[styles.listBoxTitleWrap]} backgroundColor={colorSelect.blue}>
-                                <HStack alignItems={'center'} justifyContent='space-between'>
-                                    <DefText text='본사 게시판' style={[styles.listBoxTitle]} />
-                                    <TouchableOpacity onPress={()=>navigation.navigate('OfficeBoard')} style={styles.listBoxTitleArrButton}>
+                                <TouchableOpacity onPress={()=>navigation.navigate('OfficeBoard')}>
+                                    <HStack alignItems={'center'} justifyContent='space-between' width={width - 40} height='35px'  borderTopLeftRadius={10} borderTopRightRadius={10} px='15px'>
+                                        <DefText text='본사 게시판' style={[styles.listBoxTitle]} />
+                                    
                                         <Image source={require('../images/commuMoreBtn.png')} alt='더보기' style={[styles.listBoxTitleArr]} />
-                                    </TouchableOpacity>
-                                </HStack>
+                                    </HStack>
+                                </TouchableOpacity>
                             </Box>
                             <Box p='15px'>
                                 {
@@ -171,7 +221,7 @@ const Comunication = (props) => {
                                                 <HStack alignItems={'center'} justifyContent='space-between'>
                                                     <HStack   width='85%'>
                                                         <Box width='32%' >
-                                                            <DefText text={'[' + item.wr_1 + ']'} style={[styles.boardText]} />
+                                                            <DefText text={'[' + textLengthOverCut(item.wr_1, 5) + ']'} style={[styles.boardText]} />
                                                         </Box>
                                                         <Box width='64%' >
                                                             
@@ -205,12 +255,13 @@ const Comunication = (props) => {
                         </Box>
                         <Box mt='30px' backgroundColor={'#fff'} shadow={9} borderRadius={10}>
                             <Box style={[styles.listBoxTitleWrap]} backgroundColor={'#5893EA'}>
-                                <HStack alignItems={'center'} justifyContent='space-between'>
-                                    <DefText text='지사 / 지점 게시판' style={[styles.listBoxTitle]} />
-                                    <TouchableOpacity onPress={()=>navigation.navigate('BrandBoard')} style={styles.listBoxTitleArrButton}>
+                                <TouchableOpacity onPress={()=>navigation.navigate('BrandBoard')} >
+                                    <HStack alignItems={'center'} justifyContent='space-between' px='15px'>
+                                        <DefText text='지사 / 지점 게시판' style={[styles.listBoxTitle]} />
+                                    
                                         <Image source={require('../images/commuMoreBtn.png')} alt='더보기' style={[styles.listBoxTitleArr]} />
-                                    </TouchableOpacity>
-                                </HStack>
+                                    </HStack>
+                                </TouchableOpacity>
                             </Box>
                             <Box p='15px'>
                                 {
@@ -220,9 +271,9 @@ const Comunication = (props) => {
                                         return(
                                             <Box key={index} style={{ marginTop: index == '0' ? 0 : 15}}>
                                                 <HStack alignItems={'center'} justifyContent='space-between'>
-                                                    <HStack   width='85%'>
+                                                    <HStack alignItems={'center'}  width='85%'>
                                                         <Box width='32%' >
-                                                            <DefText text={'[' + item.wr_1 + ']'} style={[styles.boardText]} />
+                                                            <DefText text={'[' + textLengthOverCut(item.wr_1, 5) + ']'} style={[styles.boardText]} />
                                                         </Box>
                                                         <Box width='64%'>
                                                             <TouchableOpacity onPress={()=>navigation.navigate('BoardView', {'item':item, 'screen':'BrandBoard', 'idx':item.wr_id})}>
@@ -253,15 +304,15 @@ const Comunication = (props) => {
                                 }
                                 
                             </Box>
-                        </Box>
-                        <Box mt='30px' backgroundColor={'#fff'} shadow={9} borderRadius={10}>
+                        </Box> */}
+                        {/* <Box mt='20px' backgroundColor={'#fff'} shadow={9} borderRadius={10}>
                             <Box style={[styles.listBoxTitleWrap]} backgroundColor={colorSelect.orange}>
-                                <HStack alignItems={'center'} justifyContent='space-between'>
-                                    <DefText text='쪽지함' style={[styles.listBoxTitle]} />
-                                    <TouchableOpacity onPress={()=>navigation.navigate('MemoBoard')} style={styles.listBoxTitleArrButton}>
+                                <TouchableOpacity onPress={()=>navigation.navigate('OfficeBusiness')} >
+                                    <HStack alignItems={'center'} justifyContent='space-between' px='15px'>
+                                        <DefText text='본사 업무' style={[styles.listBoxTitle]} />
                                         <Image source={require('../images/commuMoreBtn.png')} alt='더보기' style={[styles.listBoxTitleArr]} />
-                                    </TouchableOpacity>
-                                </HStack>
+                                    </HStack>
+                                </TouchableOpacity>
                             </Box>
                             <Box p='15px'>
                                 {
@@ -271,9 +322,9 @@ const Comunication = (props) => {
                                         return(
                                             <Box key={index} style={{ marginTop: index == '0' ? 0 : 15}}>
                                                 <HStack alignItems={'center'} justifyContent='space-between'>
-                                                    <HStack width='85%'>
+                                                    <HStack width='85%' alignItems={'center'}>
                                                         <Box width='32%' >
-                                                            <DefText text={item.wr_name} style={[styles.boardText]} />
+                                                            <DefText text={ textLengthOverCut(item.wr_name, 5) } style={[styles.boardText]} />
                                                         </Box>
                                                         <Box width='64%'>
                                                             <TouchableOpacity onPress={()=>navigation.navigate('BoardView', {'item':item, 'screen':'MemoBoard', 'idx':item.wr_id})}>
@@ -298,9 +349,63 @@ const Comunication = (props) => {
                                     })
                                     :
                                     <Box>
-                                        <DefText text='받은 쪽지가 없습니다.' />
+                                        <DefText text='등록된 자료가 없습니다.' />
                                     </Box>
                                 }
+                            </Box>
+                        </Box> */}
+                        <Box backgroundColor={'#fff'} shadow={9} borderRadius={10}>
+                            <Box style={[styles.listBoxTitleWrap]} backgroundColor={colorSelect.orange}>
+                                <TouchableOpacity onPress={()=>navigation.navigate("SalesList")}>
+                                    <HStack alignItems={'center'} justifyContent='space-between' px='15px'>
+                                        <DefText text='Hot-line' style={[styles.listBoxTitle]} />
+                                        <Image source={require('../images/commuMoreBtn.png')} alt='더보기' style={[styles.listBoxTitleArr]} />
+                                    </HStack>
+                                </TouchableOpacity>
+                            </Box>
+                            <Box p='15px'>
+                                {
+                                    sales != "" ?
+                                    sales.map((item, index) => {
+                                        return(
+                                            <Box key={index} style={[ index != 0 && {marginTop:15}]}>
+                                                <HStack alignItems={'center'} justifyContent='space-between'>
+                                                    <HStack alignItems={'center'}  width='85%'>
+                                                        <Box width='32%'  >
+                                                            <DefText text={'['+ item.wr_1 +']'} />
+                                                        </Box>
+                                                        <Box width='45%' >
+                                                            <TouchableOpacity
+                                                                onPress={ ()=> navigation.navigate("SalesView", {'idx':item.wr_id})}
+                                                            >
+                                                                <HStack>
+                                                                    {
+                                                                        item.wr_10 == 0 &&
+                                                                        <Box style={[styles.newBox]}>
+                                                                            <DefText text='N' style={[styles.newBoxText]} />
+                                                                        </Box>
+                                                                    }
+                                                                    <DefText text={ textLengthOverCut(item.wr_subject, 9)} style={[styles.boardText]} />
+                                                                </HStack>
+                                                            </TouchableOpacity>
+                                                        </Box>
+                                                        <Box width='20%' alignItems={'flex-end'} >
+                                                            <DefText text={item.comment_cnt} />
+                                                        </Box>
+                                                    </HStack>
+                                                    <Box width='12%' alignItems={'flex-end'}>
+                                                        <DefText text={ item.datetime } style={{fontSize:fsize.fs12, color:'#B4B4B3'}} />
+                                                    </Box>
+                                                </HStack>
+                                            </Box>
+                                        )
+                                    })
+                                    :
+                                    <Box>
+                                        <DefText text='등록된 자료가 없습니다.' />
+                                    </Box>
+                                }
+                                
                             </Box>
                         </Box>
                     </Box>
@@ -330,7 +435,7 @@ const styles = StyleSheet.create({
         borderTopLeftRadius:10,
         borderTopRightRadius:10,
         justifyContent:'center',
-        paddingLeft:15
+        // paddingLeft:15
     },
     listBoxTitleArrButton: {
         width: 35,

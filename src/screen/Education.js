@@ -9,7 +9,7 @@ import { textLengthOverCut } from '../common/dataFunction';
 
 import {connect} from 'react-redux';
 import { actionCreators as UserAction } from '../redux/module/action/UserAction';
-import { StackActions } from '@react-navigation/native';
+import { StackActions, useIsFocused } from '@react-navigation/native';
 import Api from '../Api';
 
 const {width} = Dimensions.get('window');
@@ -18,6 +18,8 @@ const commuBoxWidth = width * 0.43;
 const Education = (props) => {
 
     const {navigation, userInfo} = props;
+
+    const isFocused = useIsFocused();
 
     const [category, setCategory] = useState('전체');
 
@@ -39,6 +41,10 @@ const Education = (props) => {
     const [eduLoading, setEduLoading] = useState(true);
     const [videoData, setVideoData] = useState([]);
     const [dataBoardList, setDataBoardList] = useState([]);
+    const [wmBestList, setWmBestList] = useState([]);
+    const [wmConsultList, setWmConsultList] = useState([]);
+    const [wmEduList, setWmEduList] = useState([]);
+
     const educationRec = async () => {
         await setEduLoading(true);
         await Api.send('com_video', {}, (args)=>{
@@ -53,15 +59,64 @@ const Education = (props) => {
 
             }
         });
-        await Api.send('com_data', {}, (args)=>{
+        await Api.send('education_dataList', {"limit":"Y"}, (args)=>{
             let resultItem = args.resultItem;
             let arrItems = args.arrItems;
     
             if(resultItem.result === 'Y' && arrItems) {
-               console.log('교육 자료 내역 결과: ', arrItems, resultItem);
+               //console.log('교육 자료 내역 결과: ', arrItems, resultItem);
                setDataBoardList(arrItems);
             }else{
                 console.log('교육 자료 내역 실패!', resultItem);
+
+            }
+        });
+        await Api.send('wm_bestList', {"limit":"Y"}, (args)=>{
+            let resultItem = args.resultItem;
+            let arrItems = args.arrItems;
+    
+            if(resultItem.result === 'Y' && arrItems) {
+               console.log('wm 우수 사례 결과: ', arrItems, resultItem);
+               setWmBestList(arrItems);
+            }else{
+                console.log('wm 우수 사례 실패!', resultItem);
+
+            }
+        });
+        await Api.send('wm_consultList', {"limit":"Y"}, (args)=>{
+            let resultItem = args.resultItem;
+            let arrItems = args.arrItems;
+    
+            if(resultItem.result === 'Y' && arrItems) {
+               console.log('wm 우수 사례 결과: ', arrItems, resultItem);
+               setWmConsultList(arrItems);
+            }else{
+                console.log('wm 우수 사례 실패!', resultItem);
+
+            }
+        });
+
+        await Api.send('wm_consultList', {"limit":"Y"}, (args)=>{
+            let resultItem = args.resultItem;
+            let arrItems = args.arrItems;
+    
+            if(resultItem.result === 'Y' && arrItems) {
+               console.log('wm 우수 사례 결과: ', arrItems, resultItem);
+               setWmConsultList(arrItems);
+            }else{
+                console.log('wm 우수 사례 실패!', resultItem);
+
+            }
+        });
+        await Api.send('wm_eduList', {"limit":"Y"}, (args)=>{
+            let resultItem = args.resultItem;
+            let arrItems = args.arrItems;
+    
+            if(resultItem.result === 'Y' && arrItems) {
+               console.log('wm 우수 사례 결과: ', arrItems, resultItem);
+               setWmEduList(arrItems);
+            }else{
+                console.log('wm 우수 사례 실패!', resultItem);
 
             }
         });
@@ -69,12 +124,14 @@ const Education = (props) => {
     }
 
     useEffect(()=>{
-        educationRec();
-    }, [])
+        if(isFocused){
+            educationRec();
+        }
+    }, [isFocused])
 
     return (
         <Box flex={1} backgroundColor='#fff'>
-            <HeaderDef headerTitle='교육' navigation={navigation} />
+            <HeaderDef headerTitle='교육&WM' navigation={navigation} />
             {
                 eduLoading ?
                 <Box flex={1} justifyContent='center' alignItems={'center'}>
@@ -110,9 +167,57 @@ const Education = (props) => {
                                 />
                             </Box>
                         </HStack> */}
-                        <Box>
+                         <Box>
                             <HStack alignItems={'center'} justifyContent='space-between'>
-                                <DefText text='동영상 교육' style={[styles.listBoxTitle]} />
+                                <DefText text='교육 자료' style={[styles.listBoxTitle]} />
+                                <TouchableOpacity onPress={()=>navigation.navigate('EducationDataNew')} style={styles.listBoxTitleArrButton}>
+                                    <Image source={require('../images/moreBtnBlack.png')} alt='더보기' style={[styles.listBoxTitleArr]} />
+                                </TouchableOpacity>
+                            </HStack>
+                            <Box p='15px' backgroundColor={'#fff'} shadow={9} borderRadius={10} mt='10px'>
+                                {
+                                    dataBoardList != '' &&
+                                    dataBoardList.length > 0 ?
+                                    dataBoardList.map((item, index)=> {
+                                        return(
+                                            <Box key={index} style={{ marginTop: index == '0' ? 0 : 15}}>
+                                                <HStack alignItems={'center'} justifyContent='space-between'>
+                                                    <HStack alignItems={'center'}  width='85%'>
+                                                        <Box width='32%' >
+                                                            <DefText text={ textLengthOverCut('[' + item.depth3 + ']', 6)} style={[styles.boardText]} />
+                                                        </Box>
+                                                        <Box width='64%' >
+                                                            
+                                                            <TouchableOpacity onPress={()=>navigation.navigate("EducationDataView", {"wr_id":item.wr_id})}>
+                                                                <HStack>
+                                                                    {/* {
+                                                                        item.wr_10 == 0 &&
+                                                                        <Box style={[styles.newBox]}>
+                                                                            <DefText text='N' style={[styles.newBoxText]} />
+                                                                        </Box>
+                                                                    } */}
+                                                                    <DefText text={ textLengthOverCut(item.wr_subject, 15)} style={[styles.boardText]} />
+                                                                </HStack>
+                                                            </TouchableOpacity>
+                                                        </Box>
+                                                    </HStack>
+                                                    <Box width='12%' alignItems={'flex-end'}>
+                                                        <DefText text={ item.wr_datetime.substring(5,10) } style={{fontSize:fsize.fs12, color:'#B4B4B3'}} />
+                                                    </Box>
+                                                </HStack>
+                                            </Box>
+                                        )
+                                    })
+                                    :
+                                    <Box alignItems={'center'} py='20px'>
+                                        <DefText text='등록된 교육자료가 없습니다.' />
+                                    </Box>
+                                }
+                            </Box>
+                        </Box>
+                        <Box mt='30px'>
+                            <HStack alignItems={'center'} justifyContent='space-between'>
+                                <DefText text='교육 영상' style={[styles.listBoxTitle]} />
                                 <TouchableOpacity onPress={()=>navigation.navigate('EducationVideo')} style={styles.listBoxTitleArrButton}>
                                     <Image source={require('../images/moreBtnBlack.png')} alt='더보기' style={[styles.listBoxTitleArr]} />
                                 </TouchableOpacity>
@@ -125,9 +230,9 @@ const Education = (props) => {
                                         return(
                                             <Box key={index} style={{ marginTop: index == '0' ? 0 : 15}}>
                                                 <HStack alignItems={'center'} justifyContent='space-between'>
-                                                    <HStack   width='85%'>
+                                                    <HStack  alignItems={'center'} width='85%'>
                                                         <Box width='32%' >
-                                                            <DefText text={'[' + item.wr_1 + ']'} style={[styles.boardText]} />
+                                                            <DefText text={ textLengthOverCut('[' + item.wr_1 + ']', 6)} style={[styles.boardText]} />
                                                         </Box>
                                                         <Box width='64%' >
                                                             
@@ -161,40 +266,40 @@ const Education = (props) => {
                         </Box>
                         <Box mt='30px'>
                             <HStack alignItems={'center'} justifyContent='space-between'>
-                                <DefText text='교육 자료' style={[styles.listBoxTitle]} />
-                                <TouchableOpacity onPress={()=>navigation.navigate('EducationData')} style={styles.listBoxTitleArrButton}>
+                                <DefText text='WM 우수사례' style={[styles.listBoxTitle]} />
+                                <TouchableOpacity onPress={()=>navigation.navigate('WMBest')} style={styles.listBoxTitleArrButton}>
                                     <Image source={require('../images/moreBtnBlack.png')} alt='더보기' style={[styles.listBoxTitleArr]} />
                                 </TouchableOpacity>
                             </HStack>
                             <Box p='15px' backgroundColor={'#fff'} shadow={9} borderRadius={10} mt='10px'>
                                 {
-                                    dataBoardList != '' &&
-                                    dataBoardList.length > 0 ?
-                                    dataBoardList.map((item, index)=> {
+                                    wmBestList != '' &&
+                                    wmBestList.length > 0 ?
+                                    wmBestList.map((item, index)=> {
                                         return(
                                             <Box key={index} style={{ marginTop: index == '0' ? 0 : 15}}>
                                                 <HStack alignItems={'center'} justifyContent='space-between'>
-                                                    <HStack   width='85%'>
+                                                    <HStack  alignItems={'center'} width='85%'>
                                                         <Box width='32%' >
-                                                            <DefText text={'[' + item.wr_1 + ']'} style={[styles.boardText]} />
+                                                            <DefText text={ textLengthOverCut('[' + item.wcatename + ']', 6)} style={[styles.boardText]} />
                                                         </Box>
                                                         <Box width='64%' >
                                                             
-                                                            <TouchableOpacity>
+                                                            <TouchableOpacity onPress={()=>navigation.navigate('WMBestView', {'idx':item.wr_id})}>
                                                                 <HStack>
-                                                                    {
+                                                                    {/* {
                                                                         item.wr_10 == 0 &&
                                                                         <Box style={[styles.newBox]}>
                                                                             <DefText text='N' style={[styles.newBoxText]} />
                                                                         </Box>
-                                                                    }
+                                                                    } */}
                                                                     <DefText text={ textLengthOverCut(item.wr_subject, 15)} style={[styles.boardText]} />
                                                                 </HStack>
                                                             </TouchableOpacity>
                                                         </Box>
                                                     </HStack>
                                                     <Box width='12%' alignItems={'flex-end'}>
-                                                        <DefText text={ item.wr_datetime.substring(5,10) } style={{fontSize:fsize.fs12, color:'#B4B4B3'}} />
+                                                        <DefText text={ item.wr_datetime.substring(5, 10) } style={{fontSize:fsize.fs12, color:'#B4B4B3'}} />
                                                     </Box>
                                                 </HStack>
                                             </Box>
@@ -202,16 +307,116 @@ const Education = (props) => {
                                     })
                                     :
                                     <Box alignItems={'center'} py='20px'>
-                                        <DefText text='등록된 교육자료가 없습니다.' />
+                                        <DefText text='등록된 WM우수사례가 없습니다.' />
                                     </Box>
                                 }
+                            
                             </Box>
                         </Box>
-                        <HStack mt='30px' justifyContent={'flex-end'}>
+                        <Box mt='30px'>
+                            <HStack alignItems={'center'} justifyContent='space-between'>
+                                <DefText text='WM 컨설팅 자료' style={[styles.listBoxTitle]} />
+                                <TouchableOpacity onPress={()=>navigation.navigate('WMCunsult')} style={styles.listBoxTitleArrButton}>
+                                    <Image source={require('../images/moreBtnBlack.png')} alt='더보기' style={[styles.listBoxTitleArr]} />
+                                </TouchableOpacity>
+                            </HStack>
+                            <Box p='15px' backgroundColor={'#fff'} shadow={9} borderRadius={10} mt='10px'>
+                                {
+                                    wmConsultList != '' &&
+                                    wmConsultList.length > 0 ?
+                                    wmConsultList.map((item, index)=> {
+                                        return(
+                                            <Box key={index} style={{ marginTop: index == '0' ? 0 : 15}}>
+                                                <HStack alignItems={'center'} justifyContent='space-between'>
+                                                    <HStack  alignItems={'center'} width='85%'>
+                                                        <Box width='32%' >
+                                                            <DefText text={ textLengthOverCut('[' + item.wcatename + ']', 6)} style={[styles.boardText]} />
+                                                        </Box>
+                                                        <Box width='64%' >
+                                                            
+                                                            <TouchableOpacity onPress={()=>navigation.navigate('WMCunsultView', {'idx':item.wr_id})}>
+                                                                <HStack>
+                                                                    {/* {
+                                                                        item.wr_10 == 0 &&
+                                                                        <Box style={[styles.newBox]}>
+                                                                            <DefText text='N' style={[styles.newBoxText]} />
+                                                                        </Box>
+                                                                    } */}
+                                                                    <DefText text={ textLengthOverCut(item.wr_subject, 15)} style={[styles.boardText]} />
+                                                                </HStack>
+                                                            </TouchableOpacity>
+                                                        </Box>
+                                                    </HStack>
+                                                    <Box width='12%' alignItems={'flex-end'}>
+                                                        <DefText text={ item.wr_datetime.substring(5, 10) } style={{fontSize:fsize.fs12, color:'#B4B4B3'}} />
+                                                    </Box>
+                                                </HStack>
+                                            </Box>
+                                        )
+                                    })
+                                    :
+                                    <Box alignItems={'center'} py='20px'>
+                                        <DefText text='등록된 WM우수사례가 없습니다.' />
+                                    </Box>
+                                }
+                            
+                            </Box>
+                        </Box>
+                        <Box mt='30px'>
+                            <HStack alignItems={'center'} justifyContent='space-between'>
+                                <DefText text='WM 교육영상' style={[styles.listBoxTitle]} />
+                                <TouchableOpacity onPress={()=>navigation.navigate('WMVideo')} style={styles.listBoxTitleArrButton}>
+                                    <Image source={require('../images/moreBtnBlack.png')} alt='더보기' style={[styles.listBoxTitleArr]} />
+                                </TouchableOpacity>
+                            </HStack>
+                            <Box p='15px' backgroundColor={'#fff'} shadow={9} borderRadius={10} mt='10px'>
+                                {
+                                    wmEduList != '' &&
+                                    wmEduList.length > 0 ?
+                                    wmEduList.map((item, index)=> {
+                                        return(
+                                            <Box key={index} style={{ marginTop: index == '0' ? 0 : 15}}>
+                                                <HStack alignItems={'center'} justifyContent='space-between'>
+                                                    <HStack  alignItems={'center'} width='85%'>
+                                                        <Box width='32%' >
+                                                            <DefText text={ textLengthOverCut('[' + item.wcatename + ']', 6)} style={[styles.boardText]} />
+                                                        </Box>
+                                                        <Box width='64%' >
+                                                            
+                                                            <TouchableOpacity onPress={()=>navigation.navigate('WMVideoView', {'idx':item.wr_id})}>
+                                                                <HStack>
+                                                                    {/* {
+                                                                        item.wr_10 == 0 &&
+                                                                        <Box style={[styles.newBox]}>
+                                                                            <DefText text='N' style={[styles.newBoxText]} />
+                                                                        </Box>
+                                                                    } */}
+                                                                    <DefText text={ textLengthOverCut(item.wr_subject, 15)} style={[styles.boardText]} />
+                                                                </HStack>
+                                                            </TouchableOpacity>
+                                                        </Box>
+                                                    </HStack>
+                                                    <Box width='12%' alignItems={'flex-end'}>
+                                                        <DefText text={ item.wr_datetime.substring(5, 10) } style={{fontSize:fsize.fs12, color:'#B4B4B3'}} />
+                                                    </Box>
+                                                </HStack>
+                                            </Box>
+                                        )
+                                    })
+                                    :
+                                    <Box alignItems={'center'} py='20px'>
+                                        <DefText text='등록된 WM우수사례가 없습니다.' />
+                                    </Box>
+                                }
+                            
+                            </Box>
+                        </Box>
+                       
+                        {/* <HStack mt='30px' justifyContent={'flex-end'}>
                             <TouchableOpacity style={[styles.myeduBtn]} onPress={()=>navigation.navigate('MyEducation')}>
                                 <DefText text='MY 교육' style={[styles.myeduBtnText]} />
                             </TouchableOpacity>
-                        </HStack>
+                        </HStack> */}
                     </Box>
                 </ScrollView>
             }

@@ -15,7 +15,7 @@ export const fweight = {
         ...Platform.select({
             ios:{
                 fontFamily:Font.NanumSquareRoundEB,
-                fontWeight:'700'
+                fontWeight:'900'
             },
             android: {
                 fontFamily:Font.NanumSquareRoundEB
@@ -25,6 +25,7 @@ export const fweight = {
     b : {
         ...Platform.select({
             ios:{
+                fontFamily:Font.NanumSquareRoundB,
                 fontWeight:'500'
             },
             android: {
@@ -61,7 +62,7 @@ export const colorSelect = {
     black1 : '#000',
     black2 : '#191919',
     black666: '#666',
-    gray : '#B4B4B3'
+    gray : '#B4B4B3',
 }
 
 export const textStyle = {

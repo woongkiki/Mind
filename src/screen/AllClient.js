@@ -67,6 +67,10 @@ const AllClient = (props) => {
             if(params.progressStatus != ''){
                 setProgressStatus(params.progressStatus);
             }
+
+            if(params.category != ''){
+                setSelectTag(params.category);
+            }
         }
 
     }, [isFocused]);
@@ -85,16 +89,33 @@ const AllClient = (props) => {
 
     const [clientLoading, setClientLoading] = useState(true);
     const [allClients, setAllClient] = useState([]);
+
+    //테스트
+    const [clientCnt, setClientCnt] = useState(0);
     const allClientReceive = async () => {
         await setClientLoading(true);
-        await Api.send('db_list', {'idx':userInfo.mb_no, 'open':selectTag, 'schText': searchText,'startDate':startDate, 'endDate':endDate, 'progress':progressStatus.join('^')}, (args)=>{
+        await Api.send('dbApi_list', {'idx':userInfo.mb_no, 'open':selectTag, 'schText': searchText,'startDate':startDate, 'endDate':endDate, 'progress':progressStatus.join('^')}, (args)=>{
             let resultItem = args.resultItem;
             let arrItems = args.arrItems;
     
             if(resultItem.result === 'Y' && arrItems) {
-                console.log('전체 고객 리스트 결과: ', arrItems, resultItem);
+                console.log('전체 고객 리스트 결과: ', resultItem);
                 setAllClient(arrItems);
 
+            }else{
+                console.log('결과 출력 실패!', resultItem);
+
+            }
+        });
+
+        await Api.send('db_nolist', {'idx':userInfo.mb_no, 'open':selectTag, 'schText': searchText,'startDate':startDate, 'endDate':endDate, 'progress':progressStatus.join('^')}, (args)=>{
+            let resultItem = args.resultItem;
+            let arrItems = args.arrItems;
+    
+            if(resultItem.result === 'Y' && arrItems) {
+                //console.log('고객 카운트 수 결과: ', arrItems, resultItem);
+                
+                setClientCnt(arrItems);
             }else{
                 console.log('결과 출력 실패!', resultItem);
 
@@ -123,7 +144,7 @@ const AllClient = (props) => {
                             />
                         </Box>
                         <TouchableOpacity
-                            onPress={()=>navigation.navigate('SearchSetting', {'startDate':startDate, 'endDate':endDate, 'progressStatus': progressStatus})}
+                            onPress={()=>navigation.navigate('SearchSetting', {'startDate':startDate, 'endDate':endDate, 'progressStatus': progressStatus, 'category': selectTag})}
                             style={{alignItems:'center', justifyContent:'center'}}
                         >
                             <Image source={require('../images/allClientMenu.png')} alt='검색필터 설정' style={{width:16, height:13, resizeMode:'contain'}}/>
@@ -137,17 +158,18 @@ const AllClient = (props) => {
                             <DefText text={'전체'} style={selectTag === '전체' && [{color: colorSelect.white}, fweight.eb]} />
                         </TouchableOpacity>
                         <TouchableOpacity 
+                            style={[styles.tagButton, selectTag === '미열람' && { backgroundColor: colorSelect.blue }]}
+                            onPress={()=>selectTagHandler('미열람')}
+                        >
+                            <DefText text={'미열람' + ' (' + clientCnt + ')'} style={selectTag === '미열람' && [{color: colorSelect.white}, fweight.eb]} />
+                        </TouchableOpacity>
+                        <TouchableOpacity 
                             style={[styles.tagButton, selectTag === '열람' && { backgroundColor: colorSelect.blue }]}
                             onPress={()=>selectTagHandler('열람')}
                         >
                             <DefText text={'열람'} style={selectTag === '열람' && [{color: colorSelect.white}, fweight.eb]} />
                         </TouchableOpacity>
-                        <TouchableOpacity 
-                            style={[styles.tagButton, selectTag === '미열람' && { backgroundColor: colorSelect.blue }]}
-                            onPress={()=>selectTagHandler('미열람')}
-                        >
-                            <DefText text={'미열람' + ' (' + allClientNo.length + ')'} style={selectTag === '미열람' && [{color: colorSelect.white}, fweight.eb]} />
-                        </TouchableOpacity>
+                        
                     </HStack>
                     {
                         startDate != '' && endDate != '' &&
@@ -187,32 +209,43 @@ const AllClient = (props) => {
                         allClients.length > 0 ?
                         allClients.map((item, index)=> {
                             return(
-                                <Box key={index} backgroundColor={'#fff'} borderRadius={10} shadow={9} mt={'15px'}>
-                                    <TouchableOpacity  style={{padding:15}} onPress={()=>navigation.navigate('ClientInfo', {'idx':item.wr_id})}>
-                                        <HStack>
-                                            <DefText text={item.wr_subject + ' 고객님'} style={[{marginRight:10}, fweight.b]} />
-                                            <DefText text={'(' + item.age + '세 / ' + item.bigo + ')'} />
+                                <Box key={index} backgroundColor={ item.wr_4 == 'AS 완료 승인' ? '#eee' : '#fff'} borderRadius={10} shadow={9} mt={'15px'}>
+                                    <TouchableOpacity disabled={ item.wr_4 == 'AS 완료 승인' ? true : false } style={{padding:15}} onPress={()=>navigation.navigate('ClientInfo', {'idx':item.wr_id})}>
+                                        <HStack alignItems={'center'} justifyContent='space-between'>
+                                            <VStack>
+                                                <HStack>
+                                                    <DefText text={item.wr_subject + ' 고객님'} style={[{marginRight:5}, fweight.b, item.wr_4 == 'AS 완료 승인' && {color:'#666'} ]} />
+                                                    <DefText text={'(' + item.age + '세 / ' + item.bigo + ')'} style={[ item.wr_4 == 'AS 완료 승인' && {color:'#666'} ]}/>
+                                                </HStack>
+                                                <DefText text={item.wr_addr1} style={[{marginTop:10}, item.wr_4 == 'AS 완료 승인' && {color:'#666'}]} />
+                                            </VStack>
+                                            <VStack alignItems={'center'}>
+                                                <DefText text={item.wr_1} style={[{marginBottom:13, color:'#333'}, item.wr_4 == 'AS 완료 승인' && {color:'#666'}]} />
+                                                <DefText text={ item.dbcheck == '0' ? '상담배정' : item.wr_4} style={[{color:'#000'}, item.wr_4 == 'AS 완료 승인' && {color:'#666'}]} />
+                                            </VStack>
+                                            <VStack justifyContent={'flex-end'} alignItems='flex-end'>
+                                                <Image source={require('../images/memberInfoArr.png')} alt='회원정보 화살표' style={{width:6, height:10, resizeMode:'contain', marginBottom:15}} />
+                                                {
+                                                    item.dbcheck == '1' ?
+                                                    <DefText text='열람' style={[{color:colorSelect.blue}]} />
+                                                    :
+                                                    <DefText text='미열람' style={[{color:'#FF4D4D'}]} />
+                                                }
+                                            </VStack>
                                         </HStack>
-                                        <DefText text={item.wr_addr1} style={[{marginTop:10}]} />
-                                        <Box position={'absolute'} top='15px' right='20px'>
-                                            <Image source={require('../images/memberInfoArr.png')} alt='회원정보 화살표' style={{width:6, height:10, resizeMode:'contain'}} />
-                                        </Box>
-                                        <Box position={'absolute'} bottom='15px' right='20px'>
-                                            {
-                                                item.dbcheck == '1' ?
-                                                <DefText text='열람' style={[{color:colorSelect.blue}]} />
-                                                :
-                                                <DefText text='미열람' style={[{color:'#FF4D4D'}]} />
-                                            }
-                                            
-                                        </Box>
+                                       
                                     </TouchableOpacity>
                                 </Box>
                             )
                         })
                         :
                         <Box justifyContent={'center'} alignItems='center' py='40px'>
-                            <DefText text={'현재 ' + selectTag + ' 상태인 고객 정보가 없습니다.'} />
+                            {
+                                selectTag == '전체' ?
+                                <DefText text={'고객 정보가 없습니다.'} />
+                                :
+                                <DefText text={'현재 ' + selectTag + ' 상태인 고객 정보가 없습니다.'} />
+                            }
                         </Box>
                     }
                 </Box>

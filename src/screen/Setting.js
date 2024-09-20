@@ -1,16 +1,31 @@
 import React, {useState, useEffect} from 'react';
-import { ScrollView, Platform, Dimensions, StyleSheet, Alert, View, TouchableOpacity, FlatList, ActivityIndicator } from 'react-native';
-import { Box, VStack, HStack, Image, Input, Select, Modal } from 'native-base';
-import { DefInput, DefText, SearchInput, SubmitButtons } from '../common/BOOTSTRAP';
+import {
+  ScrollView,
+  Platform,
+  Dimensions,
+  StyleSheet,
+  Alert,
+  View,
+  TouchableOpacity,
+  FlatList,
+  ActivityIndicator,
+} from 'react-native';
+import {Box, VStack, HStack, Image, Input, Select, Modal} from 'native-base';
+import {
+  DefInput,
+  DefText,
+  SearchInput,
+  SubmitButtons,
+} from '../common/BOOTSTRAP';
 import HeaderDef from '../components/HeaderDef';
 import {fsize, fweight, colorSelect, textStyle} from '../common/StyleDef';
-import { pointRequest } from '../Utils/DummyData';
-import { numberFormat, textLengthOverCut } from '../common/dataFunction';
-import { useFocusEffect, useIsFocused } from '@react-navigation/native';
+import {pointRequest} from '../Utils/DummyData';
+import {numberFormat, textLengthOverCut} from '../common/dataFunction';
+import {useFocusEffect, useIsFocused} from '@react-navigation/native';
 
 import {connect} from 'react-redux';
-import { actionCreators as UserAction } from '../redux/module/action/UserAction';
-import { StackActions } from '@react-navigation/native';
+import {actionCreators as UserAction} from '../redux/module/action/UserAction';
+import {StackActions} from '@react-navigation/native';
 import Api from '../Api';
 
 import ToastMessage from '../components/ToastMessage';
@@ -18,193 +33,298 @@ import ToastMessage from '../components/ToastMessage';
 const {width} = Dimensions.get('window');
 const buttonWidth = (width - 40) * 0.48;
 
-const Setting = (props) => {
+const Setting = props => {
+  const {navigation, userInfo, member_logout, member_out} = props;
 
-    const {navigation, userInfo, member_logout} = props;
+  const [logOutModal, setLogOutModal] = useState(false);
+  const [leaveModal, setLeaveModal] = useState(false);
 
-    const [logOutModal, setLogOutModal] = useState(false);
+  const [member, setMember] = useState('');
+  const [memberLoading, setMemberLoading] = useState(true);
 
-    const [member, setMember] = useState('');
-    const [memberLoading, setMemberLoading] = useState(true);
-    const memberInfos = async () => {
-        await setMemberLoading(true);
-        await Api.send('member_info', {'id':userInfo.mb_id}, (args)=>{
-            let resultItem = args.resultItem;
-            let arrItems = args.arrItems;
-    
-            if(resultItem.result === 'Y' && arrItems) {
-               console.log('회원정보 출력 결과: ', arrItems, resultItem);
-               setMember(arrItems)
-            }else{
-                console.log('회원정보 출력 실패!', resultItem);
+  const memberInfos = async () => {
+    await setMemberLoading(true);
+    await Api.send('member_info', {id: userInfo.mb_id}, args => {
+      let resultItem = args.resultItem;
+      let arrItems = args.arrItems;
 
-            }
-        });
-        await setMemberLoading(false);
+      if (resultItem.result === 'Y' && arrItems) {
+        console.log('회원정보 출력 결과: ', arrItems, resultItem);
+        setMember(arrItems);
+      } else {
+        console.log('회원정보 출력 실패!', resultItem);
+      }
+    });
+    await setMemberLoading(false);
+  };
+
+  const isFocused = useIsFocused();
+  useEffect(() => {
+    if (isFocused) {
+      memberInfos();
     }
+  }, [isFocused]);
 
-    const isFocused = useIsFocused();
-    useEffect(()=>{
-        if(isFocused){
+  const LogoutHandler = async () => {
+    const formData = new FormData();
+    formData.append('method', 'member_logout');
 
-            memberInfos();
-        }
-    }, [isFocused])
+    const logout = await member_logout(formData);
 
+    ToastMessage('로그아웃 합니다.');
 
+    navigation.reset({
+      routes: [{name: 'Login'}],
+    });
+  };
 
-    const LogoutHandler = async() => {
+  const LeaveHandler = async () => {
+    const formData = new FormData();
+    formData.append('method', 'member_leave');
+    formData.append('id', userInfo.mb_id);
 
-        const formData = new FormData();
-        formData.append('method', 'member_logout');
-   
-        const logout =  await member_logout(formData);
+    const leave = await member_out(formData);
 
-        ToastMessage('로그아웃 합니다.');
+    console.log('leave::::', leave);
 
-
-        navigation.reset({
-            routes: [{ name: 'Login' }],
-        });
-
+    if (leave.result) {
+      ToastMessage(leave.msg);
+      navigation.reset({
+        routes: [{name: 'Login'}],
+      });
+    } else {
+      ToastMessage(leave.msg);
+      setLeaveModal(false);
+      return false;
     }
+  };
 
-    return (
-        <Box flex={1} backgroundColor='#fff'>
-            <HeaderDef headerTitle='설정' navigation={navigation} />
-            {
-                memberLoading ?
-                <Box flex={1} justifyContent={'center'} alignItems='center'>
-                    <ActivityIndicator size={'large'} color='#333' />
-                </Box>
-                :
-                <ScrollView>
-                    <Box p='20px'>
-                        <Box backgroundColor={'#fff'} borderRadius={10} shadow={9} p='15px'>
-                            <HStack mb='10px' alignItems={'center'}>
-                                <Box style={[styles.leftLabel]}>
-                                    <DefText text='이름' style={[styles.leftLabelText]} />
-                                </Box>
-                                <Box style={[styles.rightLabel]}>
-                                    <DefText text={member != '' && member.mb_name} />
-                                </Box>
-                            </HStack>
-                            <HStack mb='10px' alignItems={'center'}>
-                                <Box style={[styles.leftLabel]}>
-                                    <DefText text='아이디 (사번)' style={[styles.leftLabelText]} />
-                                </Box>
-                                <Box style={[styles.rightLabel]}>
-                                    <DefText text={member != '' && member.mb_id} />
-                                </Box>
-                            </HStack>
-                            <HStack mb='10px' alignItems={'center'}>
-                                <Box style={[styles.leftLabel]}>
-                                    <DefText text='소속' style={[styles.leftLabelText]} />
-                                </Box>
-                                <Box style={[styles.rightLabel]}>
-                                    <DefText text={member != '' && member.brands} />
-                                </Box>
-                            </HStack>
-                            <HStack mb='10px' alignItems={'center'}>
-                                <Box style={[styles.leftLabel]}>
-                                    <DefText text='자격' style={[styles.leftLabelText]} />
-                                </Box>
-                                <Box style={[styles.rightLabel]}>
-                                    <DefText text='설계사' />
-                                </Box>
-                            </HStack>
-                            <HStack mb='10px' alignItems={'center'}>
-                                <Box style={[styles.leftLabel]}>
-                                    <DefText text='연락처' style={[styles.leftLabelText]} />
-                                </Box>
-                                <Box style={[styles.rightLabel]}>
-                                    <DefText text={member != '' && member.mb_hp} />
-                                </Box>
-                            </HStack>
-                            <HStack alignItems={'center'}> 
-                                <Box style={[styles.leftLabel]}>
-                                    <DefText text='이메일' style={[styles.leftLabelText]} />
-                                </Box>
-                                <Box style={[styles.rightLabel]}>
-                                    <DefText text={member != '' && member.mb_email} />
-                                </Box>
-                            </HStack>
-                        </Box>
-                        <HStack justifyContent={'space-between'} mt='15px'>
-                            <TouchableOpacity onPress={()=>navigation.navigate('MemberSetting', member)} style={[styles.settingButton, {backgroundColor:colorSelect.blue}]}>
-                                <DefText text='회원 정보 수정' style={[styles.settingButtonText]} />
-                            </TouchableOpacity>
-                            <TouchableOpacity onPress={()=>setLogOutModal(true)} style={[styles.settingButton, {backgroundColor:colorSelect.gray}]}>
-                                <DefText text='로그아웃' style={[styles.settingButtonText]} />
-                            </TouchableOpacity>
-                        </HStack>
-                    </Box>
-                </ScrollView>
-            }
-            
-            <Modal isOpen={logOutModal} onClose={() => setLogOutModal(false)}>
-                <Modal.Content borderRadius={0} p='0px'>
-                    <Modal.Body p='0px'>
-                        <Box py='30px'>
-                            <DefText text={'로그아웃 시 DB 확인 및 기타 설정 된\n알림을 받지 못할 수 있습니다.'}  style={[{textAlign:'center', lineHeight:23}, fweight.eb]}/>
-                            <DefText text={'로그아웃 하시겠습니까?'}  style={[{textAlign:'center', marginTop:30}, fweight.eb]}/>
-                        </Box>
-                        <HStack>
-                            <TouchableOpacity onPress={LogoutHandler} style={[styles.modalButton, {backgroundColor:colorSelect.blue}]}>
-                                <DefText text='확인' style={[styles.modalButtonText]} />
-                            </TouchableOpacity>
-                            <TouchableOpacity onPress={()=>setLogOutModal(false)} style={[styles.modalButton, {backgroundColor:colorSelect.gray}]}>
-                                <DefText text='취소' style={[styles.modalButtonText]} />
-                            </TouchableOpacity>
-                        </HStack>
-                    </Modal.Body>
-                </Modal.Content>
-            </Modal>
+  return (
+    <Box flex={1} backgroundColor="#fff">
+      <HeaderDef headerTitle="설정" navigation={navigation} />
+      {memberLoading ? (
+        <Box flex={1} justifyContent={'center'} alignItems="center">
+          <ActivityIndicator size={'large'} color="#333" />
         </Box>
-    );
+      ) : (
+        <ScrollView>
+          <Box p="20px">
+            <Box backgroundColor={'#fff'} borderRadius={10} shadow={9} p="15px">
+              <HStack mb="10px" alignItems={'center'}>
+                <Box style={[styles.leftLabel]}>
+                  <DefText text="이름" style={[styles.leftLabelText]} />
+                </Box>
+                <Box style={[styles.rightLabel]}>
+                  <DefText text={member != '' && member.mb_name} />
+                </Box>
+              </HStack>
+              <HStack mb="10px" alignItems={'center'}>
+                <Box style={[styles.leftLabel]}>
+                  <DefText
+                    text="아이디 (사번)"
+                    style={[styles.leftLabelText]}
+                  />
+                </Box>
+                <Box style={[styles.rightLabel]}>
+                  <DefText text={member != '' && member.mb_id} />
+                </Box>
+              </HStack>
+              <HStack mb="10px" alignItems={'center'}>
+                <Box style={[styles.leftLabel]}>
+                  <DefText text="소속" style={[styles.leftLabelText]} />
+                </Box>
+                <Box style={[styles.rightLabel]}>
+                  <DefText text={member != '' && member.brands} />
+                </Box>
+              </HStack>
+              <HStack mb="10px" alignItems={'center'}>
+                <Box style={[styles.leftLabel]}>
+                  <DefText text="자격" style={[styles.leftLabelText]} />
+                </Box>
+                <Box style={[styles.rightLabel]}>
+                  <DefText text="설계사" />
+                </Box>
+              </HStack>
+              <HStack mb="10px" alignItems={'center'}>
+                <Box style={[styles.leftLabel]}>
+                  <DefText text="연락처" style={[styles.leftLabelText]} />
+                </Box>
+                <Box style={[styles.rightLabel]}>
+                  <DefText text={member != '' && member.mb_hp} />
+                </Box>
+              </HStack>
+              <HStack alignItems={'center'}>
+                <Box style={[styles.leftLabel]}>
+                  <DefText text="이메일" style={[styles.leftLabelText]} />
+                </Box>
+                <Box style={[styles.rightLabel]}>
+                  <DefText text={member != '' && member.mb_email} />
+                </Box>
+              </HStack>
+            </Box>
+            <HStack justifyContent={'space-between'} mt="15px">
+              <TouchableOpacity
+                onPress={() => navigation.navigate('MemberSetting', member)}
+                style={[
+                  styles.settingButton,
+                  {backgroundColor: colorSelect.blue},
+                ]}>
+                <DefText
+                  text="회원 정보 수정"
+                  style={[styles.settingButtonText]}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setLogOutModal(true)}
+                style={[
+                  styles.settingButton,
+                  {backgroundColor: colorSelect.gray},
+                ]}>
+                <DefText text="로그아웃" style={[styles.settingButtonText]} />
+              </TouchableOpacity>
+            </HStack>
+
+            {/* <TouchableOpacity style={[styles.settingButton, {backgroundColor:colorSelect.blue, width:width-40, marginTop:20}]} onPress={()=>navigation.navigate('DBRequestList')}>
+                            <DefText text='DB신청' style={[styles.settingButtonText]}  />
+                        </TouchableOpacity> */}
+            <TouchableOpacity
+              onPress={() => setLeaveModal(true)}
+              style={[
+                styles.settingButton,
+                {backgroundColor: '#6AA7FF', width: width - 40, marginTop: 20},
+              ]}>
+              <DefText text="계정탈퇴" style={[styles.settingButtonText]} />
+            </TouchableOpacity>
+          </Box>
+        </ScrollView>
+      )}
+
+      <Modal isOpen={logOutModal} onClose={() => setLogOutModal(false)}>
+        <Modal.Content
+          borderRadius={0}
+          p="0px"
+          style={{
+            width: Dimensions.get('screen').width - 40,
+            minWidth: Dimensions.get('screen').width - 40,
+            maxWidth: Dimensions.get('screen').width - 40,
+          }}>
+          <Modal.Body p="0px">
+            <Box py="30px">
+              <DefText
+                text={
+                  '로그아웃 시 DB 확인 및 기타 설정 된\n알림을 받지 못할 수 있습니다.'
+                }
+                style={[{textAlign: 'center', lineHeight: 23}, fweight.eb]}
+              />
+              <DefText
+                text={'로그아웃 하시겠습니까?'}
+                style={[{textAlign: 'center', marginTop: 30}, fweight.eb]}
+              />
+            </Box>
+            <HStack>
+              <TouchableOpacity
+                onPress={LogoutHandler}
+                style={[
+                  styles.modalButton,
+                  {backgroundColor: colorSelect.blue},
+                ]}>
+                <DefText text="확인" style={[styles.modalButtonText]} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setLogOutModal(false)}
+                style={[
+                  styles.modalButton,
+                  {backgroundColor: colorSelect.gray},
+                ]}>
+                <DefText text="취소" style={[styles.modalButtonText]} />
+              </TouchableOpacity>
+            </HStack>
+          </Modal.Body>
+        </Modal.Content>
+      </Modal>
+      <Modal isOpen={leaveModal} onClose={() => setLeaveModal(false)}>
+        <Modal.Content
+          borderRadius={0}
+          p="0px"
+          style={{
+            width: Dimensions.get('screen').width - 40,
+            minWidth: Dimensions.get('screen').width - 40,
+            maxWidth: Dimensions.get('screen').width - 40,
+          }}>
+          <Modal.Body p="0px">
+            <Box py="30px">
+              <DefText
+                text={'정말 탈퇴하시겠습니까?'}
+                style={[{textAlign: 'center', lineHeight: 23}, fweight.eb]}
+              />
+            </Box>
+            <HStack>
+              <TouchableOpacity
+                onPress={LeaveHandler}
+                style={[
+                  styles.modalButton,
+                  {backgroundColor: colorSelect.blue},
+                ]}>
+                <DefText text="확인" style={[styles.modalButtonText]} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setLeaveModal(false)}
+                style={[
+                  styles.modalButton,
+                  {backgroundColor: colorSelect.gray},
+                ]}>
+                <DefText text="취소" style={[styles.modalButtonText]} />
+              </TouchableOpacity>
+            </HStack>
+          </Modal.Body>
+        </Modal.Content>
+      </Modal>
+    </Box>
+  );
 };
 
 const styles = StyleSheet.create({
-    leftLabel : {
-        width:'28%'
-    },
-    rightLabel : {
-        width:'70%'
-    },
-    leftLabelText: {
-        ...fweight.b
-    },
-    settingButton: {
-        width:buttonWidth,
-        height:40,
-        borderRadius:5,
-        alignItems:'center',
-        justifyContent:'center'
-    },
-    settingButtonText: {
-        ...fweight.eb,
-        color:colorSelect.white
-    },
-    modalButton: {
-        width:(width-40) * 0.502,
-        height:57,
-        alignItems:'center',
-        justifyContent:'center'
-    },
-    modalButtonText: {
-        fontSize:15,
-        ...fweight.eb,
-        color:colorSelect.white
-    }
-})
+  leftLabel: {
+    width: '28%',
+  },
+  rightLabel: {
+    width: '70%',
+  },
+  leftLabelText: {
+    ...fweight.b,
+  },
+  settingButton: {
+    width: buttonWidth,
+    height: 40,
+    borderRadius: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  settingButtonText: {
+    ...fweight.eb,
+    color: colorSelect.white,
+  },
+  modalButton: {
+    width: (width - 40) * 0.502,
+    height: 57,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalButtonText: {
+    fontSize: 15,
+    ...fweight.eb,
+    color: colorSelect.white,
+  },
+});
 
 export default connect(
-    ({ User }) => ({
-        userInfo: User.userInfo, //회원정보
-    }),
-    (dispatch) => ({
-        member_login: (user) => dispatch(UserAction.member_login(user)), //로그인
-        member_info: (user) => dispatch(UserAction.member_info(user)), //회원 정보 조회
-        member_logout: (user) => dispatch(UserAction.member_logout(user)), //로그아웃
-    })
+  ({User}) => ({
+    userInfo: User.userInfo, //회원정보
+  }),
+  dispatch => ({
+    member_login: user => dispatch(UserAction.member_login(user)), //로그인
+    member_info: user => dispatch(UserAction.member_info(user)), //회원 정보 조회
+    member_logout: user => dispatch(UserAction.member_logout(user)), //로그아웃
+    member_out: user => dispatch(UserAction.member_out(user)),
+  }),
 )(Setting);

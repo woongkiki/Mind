@@ -128,7 +128,7 @@ const Calculate = (props) => {
             let arrItems = args.arrItems;
     
             if(resultItem.result === 'Y' && arrItems) {
-               console.log('정산 리스트 결과: ', arrItems);
+               console.log('정산 리스트 결과: ', resultItem, arrItems);
                setCalList(arrItems.adjust);
                setSumPrice(arrItems.sumPrice)
             }else{
@@ -182,7 +182,7 @@ const Calculate = (props) => {
                         </TouchableOpacity>
                     </HStack>
                 </Box>
-                {
+              {
                     calList != '' ?
                     <Box mt='20px'>
                         <ScrollView
@@ -200,17 +200,14 @@ const Calculate = (props) => {
                                     <Box style={[styles.theadBox]}>
                                         <DefText text='고객명' style={[{color:'#9A9A9A'}, fweight.b]}  />
                                     </Box>
-                                    <Box style={[styles.theadBox]}>
+                                    {/* <Box style={[styles.theadBox]}>
                                         <DefText text='종류' style={[{color:'#9A9A9A'}, fweight.b]}  />
-                                    </Box>
+                                    </Box> */}
                                     <Box style={[styles.theadBox]}>
                                         <DefText text='처리' style={[{color:'#9A9A9A'}, fweight.b]}  />
                                     </Box>
                                     <Box style={[styles.theadBox]}>
-                                        <DefText text='단가' style={[{color:'#9A9A9A'}, fweight.b]}  />
-                                    </Box>
-                                    <Box style={[styles.theadBox]}>
-                                        <DefText text='할인' style={[{color:'#9A9A9A'}, fweight.b]}  />
+                                        <DefText text='정산금액' style={[{color:'#9A9A9A'}, fweight.b]}  />
                                     </Box>
                                 </HStack>
                                 <Box>
@@ -224,23 +221,21 @@ const Calculate = (props) => {
                                                             <DefText text={index + 1} style={[fweight.b, {color:'#666666'}]} />
                                                         </Box>
                                                         <Box style={[styles.theadBox]}>
-                                                            <DefText text={item.date} style={[fweight.b, {color:'#666666'}]}  />
+                                                            <DefText text={item.wr_datetime.substring(0, 10)} style={[fweight.b, {color:'#666666'}]}  />
                                                         </Box>
                                                         <Box style={[styles.theadBox]}>
-                                                            <DefText text={item.wr_5} style={[fweight.b, {color:'#666666'}]}  />
+                                                            <DefText text={item.pf_name} style={[fweight.b, {color:'#666666'}]}  />
                                                         </Box>
-                                                        <Box style={[styles.theadBox]}>
+                                                        {/* <Box style={[styles.theadBox]}>
                                                             <DefText text={item.cname} style={[fweight.b, {color:'#666666'}]} />
-                                                        </Box>
+                                                        </Box> */}
                                                         <Box style={[styles.theadBox]}>
                                                             <DefText text={item.type} style={[fweight.b, {color:'#666666'}]}  />
                                                         </Box>
                                                         <Box style={[styles.theadBox]}>
-                                                            <DefText text={numberFormat(item.wr_1)} style={[fweight.b, {color:'#666666'}]}  />
+                                                            <DefText text={numberFormat(item.wr_8)} style={[fweight.b, {color:'#666666'}]}  />
                                                         </Box>
-                                                        <Box style={[styles.theadBox]}>
-                                                            <DefText text={item.wr_7 + '%'} style={[fweight.b, {color:'#666666'}]}  />
-                                                        </Box>
+                                                        
                                                     </HStack>
                                                 </Box>
                                             )
@@ -254,8 +249,7 @@ const Calculate = (props) => {
                     <Box py='60px' alignItems={'center'}>
                         <DefText text='정산내역이 없습니다.' />
                     </Box>
-                }
-                
+                } 
             </ScrollView>
   
             <DateTimePickerModal
@@ -263,6 +257,7 @@ const Calculate = (props) => {
                 mode="date"
                 onConfirm={startDateHandler}
                 onCancel={startDataModalClose}
+                
             />
             <DateTimePickerModal
                 isVisible={endDataModal}

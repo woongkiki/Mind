@@ -1,36 +1,26 @@
 {
   "project_info": {
-    "project_number": "737850811312",
-    "project_id": "mindapp-3996c",
-    "storage_bucket": "mindapp-3996c.appspot.com"
+    "project_number": "785651340031",
+    "project_id": "mind-app-c7061",
+    "storage_bucket": "mind-app-c7061.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:737850811312:android:eb7366ade1a940767a2c75",
+        "mobilesdk_app_id": "1:785651340031:android:54f1f2a3de1d58ca55b2ca",
         "android_client_info": {
-          "package_name": "com.mind"
+          "package_name": "com.myfinancialpartner.mind"
         }
       },
-      "oauth_client": [
-        {
-          "client_id": "737850811312-5eajvjebk5jg5ngjt06ar8s19v23o64g.apps.googleusercontent.com",
-          "client_type": 3
-        }
-      ],
+      "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyD6-awxuNeSq4Zw2NwYqFDDymgLfZuSGqc"
+          "current_key": "AIzaSyDvOq1nTdEwd7ICj9eHjtcYl2NJt2_rMmM"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": [
-            {
-              "client_id": "737850811312-5eajvjebk5jg5ngjt06ar8s19v23o64g.apps.googleusercontent.com",
-              "client_type": 3
-            }
-          ]
+          "other_platform_oauth_client": []
         }
       }
     }

@@ -83,9 +83,9 @@ const PasswordLost = (props) => {
                     page == 1 &&
                     <Box p='20px'>
                         <Box>
-                            <DefText text='아이디' style={[styles.labelTitle]} />
+                            <DefText text='아이디 (사번)' style={[styles.labelTitle]} />
                             <DefInput 
-                                placeholderText='아이디를 입력하세요.'
+                                placeholderText='사번을 입력하세요.'
                                 inputValue={id}
                                 onChangeText={idChange}
                             />
